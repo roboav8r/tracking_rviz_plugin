@@ -7,7 +7,7 @@
     <message_type>tracking_msgs/PosDetections</message_type>
   </class>
   
-  <class name="tracking_rviz_plugin/TrackedObjects" type="tracking_rviz_plugin::TrackedObjectsDisplay" base_class_type="rviz::Display">
+  <!-- <class name="tracking_rviz_plugin/TrackedObjects" type="tracking_rviz_plugin::TrackedObjectsDisplay" base_class_type="rviz::Display">
     <description>
       Displays tracked objects from tracking_msgs/Tracks messages.
     </description>
@@ -19,6 +19,6 @@
       Displays object trajectories from tracking_msgs/Trajectories messages.
     </description>
     <message_type>tracking_msgs/Trajectories</message_type>
-  </class>
+  </class> -->
 
 </library>
