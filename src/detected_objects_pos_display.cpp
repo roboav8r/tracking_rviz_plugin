@@ -21,7 +21,7 @@ void DetectedObjectsPosDisplay::onInitialize()
     m_render_detection_ids_property     = new rviz::BoolProperty( "Render detection IDs", true, "Render IDs of the detection that a track was matched against, if any", this, SLOT(stylesChanged()));
     m_render_confidences_property       = new rviz::BoolProperty( "Render confidences", false, "Render detection confidences", this, SLOT(stylesChanged()));
     m_render_orientations_property      = new rviz::BoolProperty( "Render orientation arrows", true, "Render orientation arrows (only if orientation covariances are finite!)", this, SLOT(stylesChanged()));
-    m_render_modality_text_property     = new rviz::BoolProperty( "Render modality text", false, "Render detection modality as text below detected person", this, SLOT(stylesChanged()));
+    m_render_sensor_text_property     = new rviz::BoolProperty( "Render sensor text", false, "Render detection sensor as text below detected person", this, SLOT(stylesChanged()));
 
     m_text_spacing_property = new rviz::FloatProperty( "Text spacing", 1.0, "Factor for vertical spacing betweent texts", this, SLOT(stylesChanged()), this );
     
@@ -34,7 +34,6 @@ void DetectedObjectsPosDisplay::onInitialize()
 DetectedObjectsPosDisplay::~DetectedObjectsPosDisplay()
 {
     m_previousDetections.clear();
-    visuals_.clear()
 }
 
 // Clear the visuals by deleting their objects.
@@ -42,13 +41,12 @@ void DetectedObjectsPosDisplay::reset()
 {
     ObjectDisplayCommon::reset();
     m_previousDetections.clear();
-    visuals_.clear()
 }
 
 // Set the rendering style (cylinders, meshes, ...) of detected objects
 void DetectedObjectsPosDisplay::objectVisualTypeChanged()
 {
-    foreach(shared_ptr<DetectedObjectVisual>& detectedObjectVisual, m_previousDetections)
+    foreach(std::shared_ptr<DetectedObjectVisual>& detectedObjectVisual, m_previousDetections)
     {
         detectedObjectVisual->objectVisual.reset();
         createObjectVisualIfRequired(detectedObjectVisual->sceneNode.get(), detectedObjectVisual->objectVisual);
@@ -59,7 +57,7 @@ void DetectedObjectsPosDisplay::objectVisualTypeChanged()
 // Update dynamically adjustable properties of all existing detections
 void DetectedObjectsPosDisplay::stylesChanged()
 {
-    foreach(shared_ptr<DetectedObjectVisual>& detectedObjectVisual, m_previousDetections)
+    foreach(std::shared_ptr<DetectedObjectVisual>& detectedObjectVisual, m_previousDetections)
     {
         bool objectHidden = isObjectHidden(detectedObjectVisual->detectionId);
 
@@ -70,7 +68,7 @@ void DetectedObjectsPosDisplay::stylesChanged()
         Ogre::ColourValue detectionColor = getColorFromId(detectedObjectVisual->detectionId);
         detectionColor.a *= m_commonProperties->alpha->getFloat(); // general alpha
         if(objectHidden) detectionColor.a = 0.0;
-        if(detectedObjectVisual->confidence < m_low_confidence_threshold_property->getFloat()) detectionColor.a *= m_low_confidence_alpha_property->getFloat();
+        if(detectedObjectVisual->classConfidence < m_low_confidence_threshold_property->getFloat()) detectionColor.a *= m_low_confidence_alpha_property->getFloat();
 
         if(detectedObjectVisual->objectVisual) {
             detectedObjectVisual->objectVisual->setColor(detectionColor);
@@ -88,11 +86,11 @@ void DetectedObjectsPosDisplay::stylesChanged()
         detectedObjectVisual->detectionIdText->setColor(fontColor);
         if(m_render_detection_ids_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->detectionIdText->getCharacterHeight();
 
-        detectedObjectVisual->modalityText->setCharacterHeight(0.18 * m_commonProperties->font_scale->getFloat());
-        detectedObjectVisual->modalityText->setPosition(Ogre::Vector3(textOffset, 0, -0.5*detectedObjectVisual->modalityText->getCharacterHeight() - textOffset));
-        detectedObjectVisual->modalityText->setVisible(m_render_modality_text_property->getBool());
-        detectedObjectVisual->modalityText->setColor(fontColor);
-        if(m_render_modality_text_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->modalityText->getCharacterHeight();
+        detectedObjectVisual->sensorText->setCharacterHeight(0.18 * m_commonProperties->font_scale->getFloat());
+        detectedObjectVisual->sensorText->setPosition(Ogre::Vector3(textOffset, 0, -0.5*detectedObjectVisual->sensorText->getCharacterHeight() - textOffset));
+        detectedObjectVisual->sensorText->setVisible(m_render_sensor_text_property->getBool());
+        detectedObjectVisual->sensorText->setColor(fontColor);
+        if(m_render_sensor_text_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->sensorText->getCharacterHeight();
 
         detectedObjectVisual->confidenceText->setCharacterHeight(0.13 * m_commonProperties->font_scale->getFloat());
         detectedObjectVisual->confidenceText->setPosition(Ogre::Vector3(textOffset, 0, -0.5*detectedObjectVisual->confidenceText->getCharacterHeight() - textOffset));
@@ -125,23 +123,22 @@ void DetectedObjectsPosDisplay::processMessage(const tracking_msgs::PosDetection
 
     // Clear previous detections, this will also delete them from the scene graph
     m_previousDetections.clear();
-    visuals_.clear();
 
     //
     // Iterate over all detections in this message and create a visual representation
     //
     for (vector<tracking_msgs::PosDetection>::const_iterator detectedObjectIt = msg->detections.begin(); detectedObjectIt != msg->detections.end(); ++detectedObjectIt)
     {
-        shared_ptr<DetectedObjectVisual> detectedObjectVisual;
+        std::shared_ptr<DetectedObjectVisual> detectedObjectVisual;
 
         // Create a new visual representation of the detected object
-        detectedObjectVisual = shared_ptr<DetectedObjectVisual>(new DetectedObjectVisual);
+        detectedObjectVisual = std::shared_ptr<DetectedObjectVisual>(new DetectedObjectVisual);
         m_previousDetections.push_back(detectedObjectVisual);
 
         // This scene node is the parent of all visualization elements for the detected object
-        detectedObjectVisual->sceneNode = shared_ptr<Ogre::SceneNode>(scene_node_->createChildSceneNode());
+        detectedObjectVisual->sceneNode = std::shared_ptr<Ogre::SceneNode>(scene_node_->createChildSceneNode());
         detectedObjectVisual->detectionId = detectedObjectIt->detection_id;
-        detectedObjectVisual->confidence = detectedObjectIt->class_confidence;
+        detectedObjectVisual->classConfidence = detectedObjectIt->class_confidence;
         Ogre::SceneNode* currentSceneNode = detectedObjectVisual->sceneNode.get();
 
 
@@ -150,7 +147,7 @@ void DetectedObjectsPosDisplay::processMessage(const tracking_msgs::PosDetection
         //
 
         // Create new visual for the object itself, if needed
-        shared_ptr<ObjectVisual> &objectVisual = detectedObjectVisual->objectVisual;
+        std::shared_ptr<ObjectVisual> &objectVisual = detectedObjectVisual->objectVisual;
         createObjectVisualIfRequired(currentSceneNode, objectVisual);
 
         const double objectHeight = objectVisual ? objectVisual->getHeight() : 0;
@@ -182,18 +179,18 @@ void DetectedObjectsPosDisplay::processMessage(const tracking_msgs::PosDetection
                 detectedObjectVisual->confidenceText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
             }
 
-            ss.str(""); ss << fixed << setprecision(2) << detectedObjectIt->confidence;
+            ss.str(""); ss << fixed << setprecision(2) << detectedObjectIt->class_confidence;
             detectedObjectVisual->confidenceText->setCaption(ss.str());
             detectedObjectVisual->confidenceText->showOnTop();
 
             // Modality text
-            if (!detectedObjectVisual->modalityText) {
-                detectedObjectVisual->modalityText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
+            if (!detectedObjectVisual->sensorText) {
+                detectedObjectVisual->sensorText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
             }
 
-            ss.str(""); ss << detectedObjectIt->modality;
-            detectedObjectVisual->modalityText->setCaption(ss.str());
-            detectedObjectVisual->modalityText->showOnTop();
+            ss.str(""); ss << detectedObjectIt->sensor_name;
+            detectedObjectVisual->sensorText->setCaption(ss.str());
+            detectedObjectVisual->sensorText->showOnTop();
         }
 
         //

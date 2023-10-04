@@ -13,24 +13,24 @@ namespace tracking_rviz_plugin
 
     struct DetectedObjectVisual
     {
-        shared_ptr<Ogre::SceneNode> sceneNode;
+        std::shared_ptr<Ogre::SceneNode> sceneNode;
 
-        shared_ptr<ObjectVisual> objectVisual;
-        shared_ptr<TextNode> detectionIdText, classText, confidenceText, sensorText;
-        shared_ptr<rviz::Arrow> orientationArrow;
-        shared_ptr<CovarianceVisual> covarianceVisual;
+        std::shared_ptr<ObjectVisual> objectVisual;
+        std::shared_ptr<TextNode> detectionIdText, classText, confidenceText, sensorText;
+        std::shared_ptr<rviz::Arrow> orientationArrow;
+        std::shared_ptr<CovarianceVisual> covarianceVisual;
 
-        float confidence;
+        float classConfidence;
         bool hasValidOrientation;
         unsigned int detectionId;
     };
 
-    class DetectedObjectsDisplay: public ObjectDisplayCommon<tracking_msgs::PosDetections>
+    class DetectedObjectsPosDisplay: public ObjectDisplayCommon<tracking_msgs::PosDetections>
     {
     Q_OBJECT
     public:
-        DetectedObjectsDisplay() {};
-        virtual ~DetectedPersonsDisplay();
+        DetectedObjectsPosDisplay() {};
+        virtual ~DetectedObjectsPosDisplay();
         virtual void onInitialize();
 
     protected:
@@ -50,8 +50,7 @@ namespace tracking_rviz_plugin
         void processMessage(const tracking_msgs::PosDetections::ConstPtr& msg);
        
         // All currently active tracks, with unique track ID as map key
-        vector<shared_ptr<DetectedObjectVisual> > m_previousDetections;
-        boost::circular_buffer<boost::shared_ptr<DetectedObjectVisual> > visuals_;
+        vector<std::shared_ptr<DetectedObjectVisual> > m_previousDetections;
 
         // Properties
         rviz::BoolProperty* m_render_covariances_property;
@@ -60,12 +59,12 @@ namespace tracking_rviz_plugin
         rviz::FloatProperty* m_low_confidence_threshold_property;
         rviz::FloatProperty* m_low_confidence_alpha_property;
         rviz::BoolProperty* m_render_orientations_property;
-        rviz::BoolProperty* m_render_modality_text_property;
+        rviz::BoolProperty* m_render_sensor_text_property;
 
         rviz::FloatProperty* m_text_spacing_property;
         rviz::FloatProperty* m_covariance_line_width_property;
     };
 
-} // end namespace spencer_tracking_rviz_plugin
+} // end namespace tracking_rviz_plugin
 
 #endif 
