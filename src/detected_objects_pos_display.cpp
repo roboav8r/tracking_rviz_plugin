@@ -239,7 +239,7 @@ void DetectedObjectsPosDisplay::processMessage(const tracking_msgs::PosDetection
     setStatusStd(rviz::StatusProperty::Ok, "Tracks", ss.str());
 }
 
-} // end namespace spencer_tracking_rviz_plugin
+} // end namespace tracking_rviz_plugin
 
 // Tell pluginlib about this class.  It is important to do this in
 // global scope, outside our package's namespace.
