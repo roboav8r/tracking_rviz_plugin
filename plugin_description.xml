@@ -1,6 +1,6 @@
 <library path="lib/libtracking_rviz_plugin">
 
-  <class name="tracking_rviz_plugin/DetectedPersons" type="tracking_rviz_plugin::DetectedPersonsDisplay" base_class_type="rviz::Display">
+  <class name="tracking_rviz_plugin/DetectedObjects" type="tracking_rviz_plugin::DetectedObjectsDisplay" base_class_type="rviz::Display">
     <description>
       Displays detected persons from spencer_tracking_msgs/DetectedPersons messages.
     </description>

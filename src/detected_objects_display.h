@@ -28,8 +28,8 @@
 *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef DETECTED_PERSONS_DISPLAY_H
-#define DETECTED_PERSONS_DISPLAY_H
+#ifndef DETECTED_OBJECTS_DISPLAY_H
+#define DETECTED_OBJECTS_DISPLAY_H
 
 #ifndef Q_MOC_RUN
 #include <map>
@@ -40,12 +40,12 @@
 
 namespace tracking_rviz_plugin
 {
-    /// The visual of a tracked person.
-    struct DetectedPersonVisual
+    /// The visual of a tracked object
+    struct DetectedObjectVisual
     {
         boost::shared_ptr<Ogre::SceneNode> sceneNode;
 
-        boost::shared_ptr<PersonVisual> personVisual;
+        boost::shared_ptr<ObjectVisual> objectVisual;
         boost::shared_ptr<TextNode> detectionIdText, confidenceText, modalityText;
         boost::shared_ptr<rviz::Arrow> orientationArrow;
         boost::shared_ptr<CovarianceVisual> covarianceVisual;
@@ -55,16 +55,16 @@ namespace tracking_rviz_plugin
         unsigned int detectionId;
     };
 
-    // The DetectedPersonsDisplay class itself just implements a circular buffer,
+    // The DetectedObjectsDisplay class itself just implements a circular buffer,
     // editable parameters, and Display subclass machinery.
-    class DetectedPersonsDisplay: public PersonDisplayCommon<spencer_tracking_msgs::DetectedPersons>
+    class DetectedObjectsDisplay: public ObjectDisplayCommon<spencer_tracking_msgs::DetectedPersons>
     {
     Q_OBJECT
     public:
         // Constructor.  pluginlib::ClassLoader creates instances by calling
         // the default constructor, so make sure you have one.
-        DetectedPersonsDisplay() {};
-        virtual ~DetectedPersonsDisplay();
+        DetectedObjectsDisplay() {};
+        virtual ~DetectedObjectsDisplay();
 
         // Overrides of protected virtual functions from Display.  As much
         // as possible, when Displays are not enabled, they should not be
@@ -84,9 +84,9 @@ namespace tracking_rviz_plugin
         }
 
     private Q_SLOTS:
-        void personVisualTypeChanged();
+        void objectVisualTypeChanged();
 
-        // Called whenever one of the properties in PersonDisplayCommonProperties has been changed
+        // Called whenever one of the properties in ObjectDisplayCommonProperties has been changed
         virtual void stylesChanged();
 
     private:
@@ -94,7 +94,7 @@ namespace tracking_rviz_plugin
         void processMessage(const spencer_tracking_msgs::DetectedPersons::ConstPtr& msg);
        
         // All currently active tracks, with unique track ID as map key
-        vector<boost::shared_ptr<DetectedPersonVisual> > m_previousDetections;
+        vector<boost::shared_ptr<DetectedObjectVisual> > m_previousDetections;
 
         // Properties
         rviz::BoolProperty* m_render_covariances_property;
@@ -111,4 +111,4 @@ namespace tracking_rviz_plugin
 
 } // end namespace tracking_rviz_plugin
 
-#endif // DETECTED_PERSONS_DISPLAY_H
+#endif // DETECTED_OBJECTS_DISPLAY_H

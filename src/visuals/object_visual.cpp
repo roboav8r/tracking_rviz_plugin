@@ -91,7 +91,7 @@ private:
 
 
 
-MeshPersonVisual::MeshPersonVisual(const PersonVisualDefaultArgs& args) : PersonVisual(args), m_animationState(NULL), m_walkingSpeed(1.0), entity_(NULL)
+MeshObjectVisual::MeshObjectVisual(const ObjectVisualDefaultArgs& args) : ObjectVisual(args), m_animationState(NULL), m_walkingSpeed(1.0), entity_(NULL)
 {
     m_childSceneNode = m_sceneNode->createChildSceneNode();
     m_childSceneNode->setVisible(false);
@@ -115,7 +115,7 @@ MeshPersonVisual::MeshPersonVisual(const PersonVisualDefaultArgs& args) : Person
     // Create scene entity
     static size_t count = 0;
     std::stringstream ss;
-    ss << "mesh_person_visual" << count++;
+    ss << "mesh_object_visual" << count++;
     std::string id = ss.str();
 
     entity_ = m_sceneManager->createEntity(id, meshResource);
@@ -145,7 +145,7 @@ MeshPersonVisual::MeshPersonVisual(const PersonVisualDefaultArgs& args) : Person
     m_childSceneNode->setVisible(true);
 }
 
-MeshPersonVisual::~MeshPersonVisual() {
+MeshObjectVisual::~MeshObjectVisual() {
     m_sceneManager->destroyEntity( entity_ );
 
     // destroy all the materials we've created
@@ -164,7 +164,7 @@ MeshPersonVisual::~MeshPersonVisual() {
     m_sceneManager->destroySceneNode(m_childSceneNode->getName());
 }
 
-void MeshPersonVisual::setColor(const Ogre::ColourValue& c) {
+void MeshObjectVisual::setColor(const Ogre::ColourValue& c) {
     Ogre::SceneBlendType blending;
     bool depth_write;
 
@@ -192,7 +192,7 @@ void MeshPersonVisual::setColor(const Ogre::ColourValue& c) {
     }
 }
 
-void MeshPersonVisual::setAnimationState(const std::string& nameOfAnimationState) {
+void MeshObjectVisual::setAnimationState(const std::string& nameOfAnimationState) {
     Ogre::AnimationStateSet *animationStates = entity_->getAllAnimationStates();
     if(animationStates != NULL)
     {
@@ -209,17 +209,17 @@ void MeshPersonVisual::setAnimationState(const std::string& nameOfAnimationState
       }
 
       // Not found. Set first animation state then.
-      ROS_WARN_STREAM_ONCE("Person mesh animation state " << nameOfAnimationState << " does not exist in mesh!");
+      ROS_WARN_STREAM_ONCE("Object mesh animation state " << nameOfAnimationState << " does not exist in mesh!");
       setAnimationState("");
     }
 }
 
-void MeshPersonVisual::setWalkingSpeed(float walkingSpeed) {
+void MeshObjectVisual::setWalkingSpeed(float walkingSpeed) {
     m_walkingSpeed = walkingSpeed;
 }
 
 
-void MeshPersonVisual::update(float deltaTime) {
+void MeshObjectVisual::update(float deltaTime) {
     if(m_animationState) {
         m_animationState->addTime(0.7 * deltaTime * m_walkingSpeed);
     }

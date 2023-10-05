@@ -41,17 +41,17 @@ namespace tracking_rviz_plugin
 {
 // The constructor must have no arguments, so we can't give the
 // constructor the parameters it needs to fully initialize.
-PersonDisplayCommonProperties::PersonDisplayCommonProperties(rviz::Display* display, StylesChangedSubscriber* stylesChangedSubscriber)
+ObjectDisplayCommonProperties::ObjectDisplayCommonProperties(rviz::Display* display, StylesChangedSubscriber* stylesChangedSubscriber)
     : m_display(display), m_stylesChangedSubscriber(stylesChangedSubscriber)
 {
     style = new rviz::EnumProperty( "Style", "Cylinders", "Rendering mode to use, in order of computational complexity.", m_display, SLOT(stylesChanged()), this );
     style->addOption( "Simple", STYLE_SIMPLE );
     style->addOption( "Cylinders", STYLE_CYLINDER );
-    style->addOption( "Person meshes", STYLE_PERSON_MESHES );
+    style->addOption( "Object meshes", STYLE_PERSON_MESHES );
     style->addOption( "Bounding boxes", STYLE_BOUNDING_BOXES );
     style->addOption( "Crosshairs", STYLE_CROSSHAIRS );
 
-    color_transform = new rviz::EnumProperty( "Color transform", "Rainbow", "How to color the tracked persons", m_display, SLOT(stylesChanged()), this );
+    color_transform = new rviz::EnumProperty( "Color transform", "Rainbow", "How to color the tracked objects", m_display, SLOT(stylesChanged()), this );
     color_transform->addOption( "SRL Tracking Colors", COLORS_SRL );
     color_transform->addOption( "Alternative SRL colors", COLORS_SRL_ALTERNATIVE );
     color_transform->addOption( "Rainbow", COLORS_RAINBOW );
@@ -60,7 +60,7 @@ PersonDisplayCommonProperties::PersonDisplayCommonProperties(rviz::Display* disp
     color_transform->addOption( "Vintage", COLORS_VINTAGE );
     color_transform->addOption( "Constant color", COLORS_CONSTANT );
 
-    constant_color = new rviz::ColorProperty("Color", QColor( 130, 130, 130 ), "Color for tracked persons if using constant color transform.", m_display, SLOT(stylesChanged()), this );
+    constant_color = new rviz::ColorProperty("Color", QColor( 130, 130, 130 ), "Color for tracked objects if using constant color transform.", m_display, SLOT(stylesChanged()), this );
 
     color_map_offset = new rviz::IntProperty( "Color map offset", 0, "By how many indices to shift the offset in the color map (useful if not happy with the current colors)", m_display, SLOT(stylesChanged()), this);
     color_map_offset->setMin( 0 );
@@ -69,11 +69,11 @@ PersonDisplayCommonProperties::PersonDisplayCommonProperties(rviz::Display* disp
     alpha->setMin( 0.0 );
     alpha->setMax( 1.0 );
 
-    line_width = new rviz::FloatProperty( "Line width", 0.05, "Line width for person visual", style, SLOT(stylesChanged()), this);
+    line_width = new rviz::FloatProperty( "Line width", 0.05, "Line width for object visual", style, SLOT(stylesChanged()), this);
     line_width->setMin( 0.0 );
     line_width->setMax( 1.0 );
     
-    scaling_factor = new rviz::FloatProperty( "Scaling factor", 1.0, "Scaling factor for person visual", style);
+    scaling_factor = new rviz::FloatProperty( "Scaling factor", 1.0, "Scaling factor for object visual", style);
     scaling_factor->setMin( 0.0 );
     scaling_factor->setMax( 100.0 );
 
@@ -90,13 +90,13 @@ PersonDisplayCommonProperties::PersonDisplayCommonProperties(rviz::Display* disp
 
     use_actual_z_position = new rviz::BoolProperty( "Use Z position from message", false, "Use Z position from message (otherwise place above ground plane)", z_offset, SLOT(stylesChanged()), this);
 
-    m_excluded_person_ids_property = new rviz::StringProperty( "Excluded person IDs", "", "Comma-separated list of person IDs whose visualization should be hidden", m_display, SLOT(stylesChanged()), this );
-    m_included_person_ids_property = new rviz::StringProperty( "Included person IDs", "", "Comma-separated list of person IDs whose visualization should be visible. Overrides excluded IDs.", m_display, SLOT(stylesChanged()), this );
+    m_excluded_object_ids_property = new rviz::StringProperty( "Excluded object IDs", "", "Comma-separated list of object IDs whose visualization should be hidden", m_display, SLOT(stylesChanged()), this );
+    m_included_object_ids_property = new rviz::StringProperty( "Included object IDs", "", "Comma-separated list of object IDs whose visualization should be visible. Overrides excluded IDs.", m_display, SLOT(stylesChanged()), this );
 
     hideIrrelevantProperties();
 }
 
-void PersonDisplayCommonProperties::hideIrrelevantProperties()
+void ObjectDisplayCommonProperties::hideIrrelevantProperties()
 {
     constant_color->setHidden(color_transform->getOptionInt() != COLORS_CONSTANT);
     color_map_offset->setHidden(color_transform->getOptionInt() == COLORS_CONSTANT);
@@ -106,28 +106,28 @@ void PersonDisplayCommonProperties::hideIrrelevantProperties()
 }
 
 // Callback for any changed style
-void PersonDisplayCommonProperties::stylesChanged()
+void ObjectDisplayCommonProperties::stylesChanged()
 {
     hideIrrelevantProperties();
 
-    // Update list of person IDs that shall be hidden or visible
-    m_excludedPersonIDs.clear();
+    // Update list of object IDs that shall be hidden or visible
+    m_excludedObjectIDs.clear();
     {
-        string personIDString = m_excluded_person_ids_property->getStdString();
+        string objectIDString = m_excluded_object_ids_property->getStdString();
         char_separator<char> separator(",");
-        tokenizer< char_separator<char> > tokens(personIDString, separator);
+        tokenizer< char_separator<char> > tokens(objectIDString, separator);
         foreach(const string& token, tokens) {
-         try { m_excludedPersonIDs.insert(lexical_cast<person_id>(token)); }
+         try { m_excludedObjectIDs.insert(lexical_cast<object_id>(token)); }
          catch(bad_lexical_cast &) {}
         }
     }
-    m_includedPersonIDs.clear();
+    m_includedObjectIDs.clear();
     {
-        string personIDString = m_included_person_ids_property->getStdString();
+        string objectIDString = m_included_object_ids_property->getStdString();
         char_separator<char> separator(",");
-        tokenizer< char_separator<char> > tokens(personIDString, separator);
+        tokenizer< char_separator<char> > tokens(objectIDString, separator);
         foreach(const string& token, tokens) {
-            try { m_includedPersonIDs.insert(lexical_cast<person_id>(token)); }
+            try { m_includedObjectIDs.insert(lexical_cast<object_id>(token)); }
             catch(bad_lexical_cast &) {}
         }
     }
