@@ -7,4 +7,11 @@
     <message_type>tracking_msgs/DetectedObjects</message_type>
   </class>
 
+  <class name="tracking_rviz_plugin/TrackedObjects" type="tracking_rviz_plugin::TrackedObjectsDisplay" base_class_type="rviz::Display">
+    <description>
+      Displays tracked objects from spencer_tracking_msgs/TrackedPersons messages.
+    </description>
+    <message_type>spencer_tracking_msgs/TrackedPersons</message_type>
+  </class>
+
 </library>

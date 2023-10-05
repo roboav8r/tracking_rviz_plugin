@@ -60,7 +60,7 @@ def createTrackAndDetection( tracks, detections, track_id, detection_id, angle, 
     if detection_id >= 0:
         detectedObject = DetectedObject()
         detectedObject.detection_id = detection_id
-        detectedObject.confidence = random.random()
+        detectedObject.class_confidence = random.random()
 
         detectedObject.pose = copy.deepcopy(trackedObject.pose)
         detectedObject.pose.pose.position.x += random.random() * 0.5 - 0.25 # introduce some noise on observation position

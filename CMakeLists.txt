@@ -31,12 +31,10 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(tracking_rviz_plugin)
 
-find_package(catkin REQUIRED COMPONENTS rviz tracking_msgs geometry_msgs)
+find_package(catkin REQUIRED COMPONENTS rviz tracking_msgs geometry_msgs spencer_tracking_msgs)
 catkin_package()
 include_directories(${catkin_INCLUDE_DIRS})
 link_directories(${catkin_LIBRARY_DIRS})
-
-
 
 ## This plugin includes Qt widgets, so we must include Qt.
 ## We'll use the version that rviz used so they are compatible.
@@ -47,6 +45,7 @@ if(rviz_QT_VERSION VERSION_LESS "5")
   include(${QT_USE_FILE})
   qt4_wrap_cpp(MOC_FILES
   src/detected_objects_display.h
+  src/tracked_objects_display.h
   src/object_display_common.h
 )
 else()
@@ -56,6 +55,7 @@ else()
   set(QT_LIBRARIES Qt5::Widgets)
   qt5_wrap_cpp(MOC_FILES
   src/detected_objects_display.h
+  src/tracked_objects_display.h
   src/object_display_common.h
 )
 endif()
@@ -66,6 +66,7 @@ add_definitions(-DQT_NO_KEYWORDS)
 
 set(SOURCE_FILES
   src/detected_objects_display.cpp
+  src/tracked_objects_display.cpp
   src/object_display_common.cpp
   src/visuals/object_visual.cpp
   ${MOC_FILES}
