@@ -42,30 +42,30 @@ def setPoseAndTwistFromAngle( pose, twist, angle, radius ) :
         twist.covariance[i + i * 6] = float("inf") # rotational velocity
 
 def createTrackAndDetection( tracks, detections, track_id, detection_id, angle, radius ) :
-    trackedPerson = TrackedPerson()
-    trackedPerson.track_id = track_id
+    trackedObject = TrackedPerson()
+    trackedObject.track_id = track_id
 
     if detection_id >= 0 :
-        trackedPerson.detection_id = detection_id
-        trackedPerson.is_occluded = False
+        trackedObject.detection_id = detection_id
+        trackedObject.is_occluded = False
     else :
-        trackedPerson.is_occluded = True
+        trackedObject.is_occluded = True
 
-    trackedPerson.age = rospy.Time.now() - startTime
+    trackedObject.age = rospy.Time.now() - startTime
 
-    setPoseAndTwistFromAngle(trackedPerson.pose, trackedPerson.twist, angle, radius)
-    tracks.append(trackedPerson)
+    setPoseAndTwistFromAngle(trackedObject.pose, trackedObject.twist, angle, radius)
+    tracks.append(trackedObject)
 
     if detection_id >= 0:
-        detectedPerson = DetectedPerson()
-        detectedPerson.detection_id = detection_id
-        detectedPerson.confidence = random.random()
+        detectedObject = DetectedPerson()
+        detectedObject.detection_id = detection_id
+        detectedObject.confidence = random.random()
 
-        detectedPerson.pose = copy.deepcopy(trackedPerson.pose)
-        detectedPerson.pose.pose.position.x += random.random() * 0.5 - 0.25 # introduce some noise on observation position
-        detectedPerson.pose.pose.position.y += random.random() * 0.5 - 0.25
+        detectedObject.pose = copy.deepcopy(trackedObject.pose)
+        detectedObject.pose.pose.position.x += random.random() * 0.5 - 0.25 # introduce some noise on observation position
+        detectedObject.pose.pose.position.y += random.random() * 0.5 - 0.25
 
-        detections.append(detectedPerson)
+        detections.append(detectedObject)
 
     return
 
@@ -95,15 +95,15 @@ rate = rospy.Rate(updateRateHz)
 while not rospy.is_shutdown():
     br.sendTransform(frameOffset, frameOrientation, rospy.Time.now(), "test_tf_frame", "odom")
 
-    trackedPersons = TrackedPersons()
-    trackedPersons.header.frame_id = "test_tf_frame"
-    trackedPersons.header.stamp = rospy.Time.now()
+    trackedObjects = TrackedPersons()
+    trackedObjects.header.frame_id = "test_tf_frame"
+    trackedObjects.header.stamp = rospy.Time.now()
 
-    detectedPersons = DetectedPersons()
-    detectedPersons.header = trackedPersons.header
+    detectedObjects = DetectedPersons()
+    detectedObjects.header = trackedObjects.header
 
-    tracks = trackedPersons.tracks;
-    detections = detectedPersons.detections;
+    tracks = trackedObjects.tracks;
+    detections = detectedObjects.detections;
 
     createTrackAndDetection(tracks, detections, idShift+0, 3, currentAngle, 2.0)
     createTrackAndDetection(tracks, detections, idShift+1, 7, currentAngle + pi / 2, 2.5)
@@ -111,8 +111,8 @@ while not rospy.is_shutdown():
     createTrackAndDetection(tracks, detections, idShift+3, -1, currentAngle + pi * 1.5, cos(currentAngle) * 3.5  + 7.0)
     createTrackAndDetection(tracks, detections, idShift+4, 88, 0.0, 0.0)
 
-    trackPublisher.publish( trackedPersons )
-    observationPublisher.publish( detectedPersons )
+    trackPublisher.publish( trackedObjects )
+    observationPublisher.publish( detectedObjects )
 
     currentAngle += angleStep
     currentCycle += 1
