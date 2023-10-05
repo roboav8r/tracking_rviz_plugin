@@ -35,8 +35,10 @@
 #include <map>
 #include <set>
 #include <boost/circular_buffer.hpp>
-#include <spencer_tracking_msgs/TrackedPersons.h>
+// #include <tracking_msgs/TrackedObjects.h>
 #include <geometry_msgs/Twist.h>
+#include <geometry_msgs/TwistWithCovariance.h>
+#include <geometry_msgs/PoseWithCovariance.h>
 #include <rviz/message_filter_display.h>
 
 #include <OGRE/OgreSceneNode.h>

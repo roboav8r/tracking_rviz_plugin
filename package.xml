@@ -18,16 +18,18 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>rviz</build_depend>
-  <build_depend>spencer_tracking_msgs</build_depend>
-  <build_depend>spencer_social_relation_msgs</build_depend>
-  <build_depend>spencer_human_attribute_msgs</build_depend>
+  <build_depend>tracking_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <!-- <build_depend>spencer_social_relation_msgs</build_depend>
+  <build_depend>spencer_human_attribute_msgs</build_depend> -->
   <build_depend>roslib</build_depend>
   <build_depend>qtbase5-dev</build_depend>
 
   <exec_depend>rviz</exec_depend>
-  <exec_depend>spencer_tracking_msgs</exec_depend>
-  <exec_depend>spencer_social_relation_msgs</exec_depend>
-  <exec_depend>spencer_human_attribute_msgs</exec_depend>
+  <exec_depend>tracking_msgs</exec_depend>
+
+  <!-- <exec_depend>spencer_social_relation_msgs</exec_depend>
+  <exec_depend>spencer_human_attribute_msgs</exec_depend> -->
   <exec_depend>roslib</exec_depend>
   <exec_depend>libqt5-core</exec_depend>
   <exec_depend>libqt5-gui</exec_depend>

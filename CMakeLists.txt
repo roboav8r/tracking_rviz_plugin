@@ -31,7 +31,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(tracking_rviz_plugin)
 
-find_package(catkin REQUIRED COMPONENTS rviz spencer_tracking_msgs )
+find_package(catkin REQUIRED COMPONENTS rviz tracking_msgs geometry_msgs)
 catkin_package()
 include_directories(${catkin_INCLUDE_DIRS})
 link_directories(${catkin_LIBRARY_DIRS})

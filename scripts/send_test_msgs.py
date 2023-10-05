@@ -2,6 +2,7 @@
 
 import roslib; roslib.load_manifest( 'tracking_rviz_plugin' )
 from spencer_tracking_msgs.msg import TrackedPersons, TrackedPerson, DetectedPersons, DetectedPerson
+from tracking_msgs.msg import DetectedObject, DetectedObjects
 import rospy
 from math import cos, sin, tan, pi
 import tf
@@ -57,7 +58,7 @@ def createTrackAndDetection( tracks, detections, track_id, detection_id, angle, 
     tracks.append(trackedObject)
 
     if detection_id >= 0:
-        detectedObject = DetectedPerson()
+        detectedObject = DetectedObject()
         detectedObject.detection_id = detection_id
         detectedObject.confidence = random.random()
 
@@ -73,7 +74,7 @@ def createTrackAndDetection( tracks, detections, track_id, detection_id, angle, 
 trackTopic = 'tracked_objects'
 trackPublisher = rospy.Publisher( trackTopic, TrackedPersons )
 observationTopic = 'detected_objects' 
-observationPublisher = rospy.Publisher( observationTopic, DetectedPersons )
+observationPublisher = rospy.Publisher( observationTopic, DetectedObjects )
 
 rospy.init_node( 'publish_test_tracks_and_detections' )
 br = tf.TransformBroadcaster()
@@ -99,7 +100,7 @@ while not rospy.is_shutdown():
     trackedObjects.header.frame_id = "test_tf_frame"
     trackedObjects.header.stamp = rospy.Time.now()
 
-    detectedObjects = DetectedPersons()
+    detectedObjects = DetectedObjects()
     detectedObjects.header = trackedObjects.header
 
     tracks = trackedObjects.tracks;

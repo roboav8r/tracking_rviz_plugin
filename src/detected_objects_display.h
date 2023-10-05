@@ -34,7 +34,7 @@
 #ifndef Q_MOC_RUN
 #include <map>
 #include <boost/circular_buffer.hpp>
-#include <spencer_tracking_msgs/DetectedPersons.h>
+#include <tracking_msgs/DetectedObjects.h>
 #include "object_display_common.h"
 #endif
 
@@ -46,18 +46,18 @@ namespace tracking_rviz_plugin
         boost::shared_ptr<Ogre::SceneNode> sceneNode;
 
         boost::shared_ptr<ObjectVisual> objectVisual;
-        boost::shared_ptr<TextNode> detectionIdText, confidenceText, modalityText;
-        boost::shared_ptr<rviz::Arrow> orientationArrow;
+        boost::shared_ptr<TextNode> detectionIdText, classConfidenceText, modalityText, classIdText;
+        // boost::shared_ptr<rviz::Arrow> orientationArrow;
         boost::shared_ptr<CovarianceVisual> covarianceVisual;
 
-        float confidence;
+        float classConfidence;
         bool hasValidOrientation;
-        unsigned int detectionId;
+        unsigned int detectionId, classId;
     };
 
     // The DetectedObjectsDisplay class itself just implements a circular buffer,
     // editable parameters, and Display subclass machinery.
-    class DetectedObjectsDisplay: public ObjectDisplayCommon<spencer_tracking_msgs::DetectedPersons>
+    class DetectedObjectsDisplay: public ObjectDisplayCommon<tracking_msgs::DetectedObjects>
     {
     Q_OBJECT
     public:
@@ -91,7 +91,7 @@ namespace tracking_rviz_plugin
 
     private:
         // Function to handle an incoming ROS message.
-        void processMessage(const spencer_tracking_msgs::DetectedPersons::ConstPtr& msg);
+        void processMessage(const tracking_msgs::DetectedObjects::ConstPtr& msg);
        
         // All currently active tracks, with unique track ID as map key
         vector<boost::shared_ptr<DetectedObjectVisual> > m_previousDetections;
@@ -99,6 +99,7 @@ namespace tracking_rviz_plugin
         // Properties
         rviz::BoolProperty* m_render_covariances_property;
         rviz::BoolProperty* m_render_detection_ids_property;
+        rviz::BoolProperty* m_render_class_ids_property;
         rviz::BoolProperty* m_render_confidences_property;
         rviz::FloatProperty* m_low_confidence_threshold_property;
         rviz::FloatProperty* m_low_confidence_alpha_property;

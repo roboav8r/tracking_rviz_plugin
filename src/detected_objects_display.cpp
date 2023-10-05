@@ -51,8 +51,9 @@ void DetectedObjectsDisplay::onInitialize()
 
     m_render_covariances_property       = new rviz::BoolProperty( "Render covariances", true, "Render track covariance ellipses", this, SLOT(stylesChanged()) );
     m_render_detection_ids_property     = new rviz::BoolProperty( "Render detection IDs", true, "Render IDs of the detection that a track was matched against, if any", this, SLOT(stylesChanged()));
+    m_render_class_ids_property     = new rviz::BoolProperty( "Render class IDs", true, "Render class IDs of the detection, if any", this, SLOT(stylesChanged()));
     m_render_confidences_property       = new rviz::BoolProperty( "Render confidences", false, "Render detection confidences", this, SLOT(stylesChanged()));
-    m_render_orientations_property      = new rviz::BoolProperty( "Render orientation arrows", true, "Render orientation arrows (only if orientation covariances are finite!)", this, SLOT(stylesChanged()));
+    // m_render_orientations_property      = new rviz::BoolProperty( "Render orientation arrows", true, "Render orientation arrows (only if orientation covariances are finite!)", this, SLOT(stylesChanged()));
     m_render_modality_text_property     = new rviz::BoolProperty( "Render modality text", false, "Render detection modality as text below detected object", this, SLOT(stylesChanged()));
 
     m_text_spacing_property = new rviz::FloatProperty( "Text spacing", 1.0, "Factor for vertical spacing betweent texts", this, SLOT(stylesChanged()), this );
@@ -100,7 +101,7 @@ void DetectedObjectsDisplay::stylesChanged()
         Ogre::ColourValue detectionColor = getColorFromId(detectedObjectVisual->detectionId);
         detectionColor.a *= m_commonProperties->alpha->getFloat(); // general alpha
         if(objectHidden) detectionColor.a = 0.0;
-        if(detectedObjectVisual->confidence < m_low_confidence_threshold_property->getFloat()) detectionColor.a *= m_low_confidence_alpha_property->getFloat();
+        if(detectedObjectVisual->classConfidence < m_low_confidence_threshold_property->getFloat()) detectionColor.a *= m_low_confidence_alpha_property->getFloat();
 
         if(detectedObjectVisual->objectVisual) {
             detectedObjectVisual->objectVisual->setColor(detectionColor);
@@ -118,17 +119,23 @@ void DetectedObjectsDisplay::stylesChanged()
         detectedObjectVisual->detectionIdText->setColor(fontColor);
         if(m_render_detection_ids_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->detectionIdText->getCharacterHeight();
 
-        detectedObjectVisual->modalityText->setCharacterHeight(0.18 * m_commonProperties->font_scale->getFloat());
+        detectedObjectVisual->classIdText->setCharacterHeight(0.18 * m_commonProperties->font_scale->getFloat());
+        detectedObjectVisual->classIdText->setPosition(Ogre::Vector3(0,0, -0.5*detectedObjectVisual->classIdText->getCharacterHeight() - textOffset));
+        detectedObjectVisual->classIdText->setVisible(m_render_detection_ids_property->getBool());
+        detectedObjectVisual->classIdText->setColor(fontColor);
+        if(m_render_class_ids_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->classIdText->getCharacterHeight();
+
+        detectedObjectVisual->classConfidenceText->setCharacterHeight(0.13 * m_commonProperties->font_scale->getFloat());
+        detectedObjectVisual->classConfidenceText->setPosition(Ogre::Vector3(0, 0, -0.5*detectedObjectVisual->classConfidenceText->getCharacterHeight() - textOffset));
+        detectedObjectVisual->classConfidenceText->setVisible(m_render_confidences_property->getBool());
+        detectedObjectVisual->classConfidenceText->setColor(fontColor);
+        if(m_render_confidences_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->classConfidenceText->getCharacterHeight();
+
+        detectedObjectVisual->modalityText->setCharacterHeight(0.125 * m_commonProperties->font_scale->getFloat());
         detectedObjectVisual->modalityText->setPosition(Ogre::Vector3(textOffset, 0, -0.5*detectedObjectVisual->modalityText->getCharacterHeight() - textOffset));
         detectedObjectVisual->modalityText->setVisible(m_render_modality_text_property->getBool());
         detectedObjectVisual->modalityText->setColor(fontColor);
         if(m_render_modality_text_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->modalityText->getCharacterHeight();
-
-        detectedObjectVisual->confidenceText->setCharacterHeight(0.13 * m_commonProperties->font_scale->getFloat());
-        detectedObjectVisual->confidenceText->setPosition(Ogre::Vector3(textOffset, 0, -0.5*detectedObjectVisual->confidenceText->getCharacterHeight() - textOffset));
-        detectedObjectVisual->confidenceText->setVisible(m_render_confidences_property->getBool());
-        detectedObjectVisual->confidenceText->setColor(fontColor);
-        if(m_render_confidences_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->confidenceText->getCharacterHeight();
 
         // Set color of covariance visualization
         Ogre::ColourValue covarianceColor = detectionColor;
@@ -136,16 +143,16 @@ void DetectedObjectsDisplay::stylesChanged()
         detectedObjectVisual->covarianceVisual->setColor(covarianceColor);
         detectedObjectVisual->covarianceVisual->setLineWidth(m_covariance_line_width_property->getFloat());
 
-        // Update orientation arrow
-        double arrowAlpha = m_render_orientations_property->getBool() && detectedObjectVisual->hasValidOrientation ? detectionColor.a : 0.0;
-        detectedObjectVisual->orientationArrow->setColor(Ogre::ColourValue(detectionColor.r, detectionColor.g, detectionColor.b, arrowAlpha));
-        const double shaftLength = 0.5, shaftDiameter = 0.05, headLength = 0.2, headDiameter = 0.2;
-        detectedObjectVisual->orientationArrow->set(shaftLength, shaftDiameter, headLength, headDiameter);
+        // // Update orientation arrow
+        // double arrowAlpha = m_render_orientations_property->getBool() && detectedObjectVisual->hasValidOrientation ? detectionColor.a : 0.0;
+        // detectedObjectVisual->orientationArrow->setColor(Ogre::ColourValue(detectionColor.r, detectionColor.g, detectionColor.b, arrowAlpha));
+        // const double shaftLength = 0.5, shaftDiameter = 0.05, headLength = 0.2, headDiameter = 0.2;
+        // detectedObjectVisual->orientationArrow->set(shaftLength, shaftDiameter, headLength, headDiameter);
     }
 }
 
 // This is our callback to handle an incoming message.
-void DetectedObjectsDisplay::processMessage(const spencer_tracking_msgs::DetectedPersons::ConstPtr& msg)
+void DetectedObjectsDisplay::processMessage(const tracking_msgs::DetectedObjects::ConstPtr& msg)
 {
     // Get transforms into fixed frame etc.
     if(!preprocessMessage(msg)) return;
@@ -159,7 +166,7 @@ void DetectedObjectsDisplay::processMessage(const spencer_tracking_msgs::Detecte
     //
     // Iterate over all detections in this message and create a visual representation
     //
-    for (vector<spencer_tracking_msgs::DetectedPerson>::const_iterator detectedObjectIt = msg->detections.begin(); detectedObjectIt != msg->detections.end(); ++detectedObjectIt)
+    for (vector<tracking_msgs::DetectedObject>::const_iterator detectedObjectIt = msg->detections.begin(); detectedObjectIt != msg->detections.end(); ++detectedObjectIt)
     {
         boost::shared_ptr<DetectedObjectVisual> detectedObjectVisual;
 
@@ -170,7 +177,8 @@ void DetectedObjectsDisplay::processMessage(const spencer_tracking_msgs::Detecte
         // This scene node is the parent of all visualization elements for the detected object
         detectedObjectVisual->sceneNode = boost::shared_ptr<Ogre::SceneNode>(scene_node_->createChildSceneNode());
         detectedObjectVisual->detectionId = detectedObjectIt->detection_id;
-        detectedObjectVisual->confidence = detectedObjectIt->confidence;
+        detectedObjectVisual->classId = detectedObjectIt->class_id;
+        detectedObjectVisual->classConfidence = detectedObjectIt->class_confidence;
         Ogre::SceneNode* currentSceneNode = detectedObjectVisual->sceneNode.get();
 
 
@@ -203,24 +211,33 @@ void DetectedObjectsDisplay::processMessage(const spencer_tracking_msgs::Detecte
                 detectedObjectVisual->detectionIdText->showOnTop();
             }
 
-            ss.str(""); ss << "det " << detectedObjectIt->detection_id;
+            ss.str(""); ss << "Det " << detectedObjectIt->detection_id;
             detectedObjectVisual->detectionIdText->setCaption(ss.str());
 
-            // Confidence value
-            if (!detectedObjectVisual->confidenceText) {
-                detectedObjectVisual->confidenceText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
+            // Class ID
+            if (!detectedObjectVisual->classIdText) {
+                detectedObjectVisual->classIdText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
+                detectedObjectVisual->classIdText->showOnTop();
             }
 
-            ss.str(""); ss << fixed << setprecision(2) << detectedObjectIt->confidence;
-            detectedObjectVisual->confidenceText->setCaption(ss.str());
-            detectedObjectVisual->confidenceText->showOnTop();
+            ss.str(""); ss << "Class " << detectedObjectIt->class_id;
+            detectedObjectVisual->classIdText->setCaption(ss.str());
+
+            // Confidence value
+            if (!detectedObjectVisual->classConfidenceText) {
+                detectedObjectVisual->classConfidenceText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
+            }
+
+            ss.str(""); ss << "["<< fixed << setprecision(2) << detectedObjectIt->class_confidence << "%]";
+            detectedObjectVisual->classConfidenceText->setCaption(ss.str());
+            detectedObjectVisual->classConfidenceText->showOnTop();
 
             // Modality text
             if (!detectedObjectVisual->modalityText) {
                 detectedObjectVisual->modalityText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
             }
 
-            ss.str(""); ss << detectedObjectIt->modality;
+            ss.str(""); ss << msg->sensor_name;
             detectedObjectVisual->modalityText->setCaption(ss.str());
             detectedObjectVisual->modalityText->showOnTop();
         }
@@ -243,20 +260,20 @@ void DetectedObjectsDisplay::processMessage(const spencer_tracking_msgs::Detecte
         //
         // Orientation arrows
         //
-        if (!detectedObjectVisual->orientationArrow) {
-            detectedObjectVisual->orientationArrow.reset(new rviz::Arrow(context_->getSceneManager(), currentSceneNode));
-        }
+        // if (!detectedObjectVisual->orientationArrow) {
+        //     detectedObjectVisual->orientationArrow.reset(new rviz::Arrow(context_->getSceneManager(), currentSceneNode));
+        // }
 
         // Update orientation arrow
-        {
-            const Ogre::Vector3 forwardVector(1,0,0);
+        // {
+        //     const Ogre::Vector3 forwardVector(1,0,0);
 
-            const double objectRadius = 0.2;
-            const Ogre::Vector3 arrowAttachPoint(objectRadius, 0, halfObjectHeight); // relative to tracked object's scene node
-            detectedObjectVisual->orientationArrow->setPosition(arrowAttachPoint);
-            detectedObjectVisual->orientationArrow->setOrientation(Ogre::Vector3::NEGATIVE_UNIT_Z.getRotationTo(forwardVector));
-            detectedObjectVisual->hasValidOrientation = hasValidOrientation(detectedObjectIt->pose);
-        }
+        //     const double objectRadius = 0.2;
+        //     const Ogre::Vector3 arrowAttachPoint(objectRadius, 0, halfObjectHeight); // relative to tracked object's scene node
+        //     detectedObjectVisual->orientationArrow->setPosition(arrowAttachPoint);
+        //     detectedObjectVisual->orientationArrow->setOrientation(Ogre::Vector3::NEGATIVE_UNIT_Z.getRotationTo(forwardVector));
+        //     detectedObjectVisual->hasValidOrientation = hasValidOrientation(detectedObjectIt->pose);
+        // }
 
     } // end for loop over all detected objects
 
