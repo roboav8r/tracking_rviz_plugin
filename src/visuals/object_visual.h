@@ -1,5 +1,35 @@
-#ifndef OBJECT_VISUAL_H
-#define OBJECT_VISUAL_H
+/*
+* Software License Agreement (BSD License)
+*
+*  Copyright (c) 2013-2015, Timm Linder, Social Robotics Lab, University of Freiburg
+*  All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without
+*  modification, are permitted provided that the following conditions are met:
+*
+*  * Redistributions of source code must retain the above copyright notice, this
+*    list of conditions and the following disclaimer.
+*  * Redistributions in binary form must reproduce the above copyright notice,
+*    this list of conditions and the following disclaimer in the documentation
+*    and/or other materials provided with the distribution.
+*  * Neither the name of the copyright holder nor the names of its contributors
+*    may be used to endorse or promote products derived from this software
+*    without specific prior written permission.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+*  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+*  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+*  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+*  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+*  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+*  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+*  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+#ifndef PERSON_VISUAL_H
+#define PERSON_VISUAL_H
 
 #include <rviz/ogre_helpers/shape.h>
 #include <rviz/ogre_helpers/billboard_line.h>
@@ -17,17 +47,17 @@ namespace tracking_rviz_plugin {
         virtual void setLineWidth(double lineWidth) = 0;
     };
 
-    // Default arguments that need to be supplied to all types of ObjectVisual
-    struct ObjectVisualDefaultArgs {
-        ObjectVisualDefaultArgs(Ogre::SceneManager* sceneManager, Ogre::SceneNode* parentNode) : sceneManager(sceneManager), parentNode(parentNode) {}
+    // Default arguments that need to be supplied to all types of PersonVisual
+    struct PersonVisualDefaultArgs {
+        PersonVisualDefaultArgs(Ogre::SceneManager* sceneManager, Ogre::SceneNode* parentNode) : sceneManager(sceneManager), parentNode(parentNode) {}
         Ogre::SceneManager* sceneManager;
         Ogre::SceneNode* parentNode;
     };
 
-    /// Base class for all object visualization types
-    class ObjectVisual {
+    /// Base class for all person visualization types
+    class PersonVisual {
     public:
-        ObjectVisual(const ObjectVisualDefaultArgs& args) :
+        PersonVisual(const PersonVisualDefaultArgs& args) :
                 m_sceneManager(args.sceneManager),
                 m_correctOrientation( Ogre::Degree(90), Ogre::Vector3(1,0,0) )
         {
@@ -38,7 +68,7 @@ namespace tracking_rviz_plugin {
             m_sceneNode->setScale(m_correctOrientation * scale);
         }
 
-        virtual ~ObjectVisual() {
+        virtual ~PersonVisual() {
             m_sceneManager->destroySceneNode(m_sceneNode->getName());
         };
 
@@ -81,10 +111,10 @@ namespace tracking_rviz_plugin {
     };
 
 
-    /// Visualization of an object as cylinder (body) + sphere (head)
-    class CylinderObjectVisual : public ObjectVisual {
+    /// Visualization of a person as cylinder (body) + sphere (head)
+    class CylinderPersonVisual : public PersonVisual {
     public:
-        CylinderObjectVisual(const ObjectVisualDefaultArgs& args) : ObjectVisual(args)
+        CylinderPersonVisual(const PersonVisualDefaultArgs& args) : PersonVisual(args)
         {
             m_bodyShape = new rviz::Shape(rviz::Shape::Cylinder, args.sceneManager, m_sceneNode);
             m_headShape = new rviz::Shape(rviz::Shape::Sphere, args.sceneManager, m_sceneNode);
@@ -100,7 +130,7 @@ namespace tracking_rviz_plugin {
             m_headShape->setPosition(Ogre::Vector3(0, 0, totalHeight / 2 - headDiameter / 2 ));
         }
 
-        virtual ~CylinderObjectVisual() {
+        virtual ~CylinderPersonVisual() {
             delete m_bodyShape;
             delete m_headShape;
         }
@@ -119,17 +149,17 @@ namespace tracking_rviz_plugin {
     };
 
 
-    /// Visualization of an object as a wireframe bounding box
-    class BoundingBoxObjectVisual : public ObjectVisual, public HasLineWidth {
+    /// Visualization of a person as a wireframe bounding box
+    class BoundingBoxPersonVisual : public PersonVisual, public HasLineWidth {
     public:
-        BoundingBoxObjectVisual(const ObjectVisualDefaultArgs& args, double height = 1.75, double width = 0.6, double scalingFactor = 1.0) : ObjectVisual(args)
+        BoundingBoxPersonVisual(const PersonVisualDefaultArgs& args, double height = 1.75, double width = 0.6, double scalingFactor = 1.0) : PersonVisual(args)
         {
             m_width = width; m_height = height; m_scalingFactor = scalingFactor; m_lineWidth = 0.03;
             m_wireframe = NULL;
             generateWireframe();
         }
 
-        virtual ~BoundingBoxObjectVisual() {
+        virtual ~BoundingBoxPersonVisual() {
             delete m_wireframe;
         }
 
@@ -194,17 +224,17 @@ namespace tracking_rviz_plugin {
     };
 
 
-    /// Visualization of an object as a crosshair
-    class CrosshairObjectVisual : public ObjectVisual, public HasLineWidth {
+    /// Visualization of a person as a crosshair
+    class CrosshairPersonVisual : public PersonVisual, public HasLineWidth {
     public:
-        CrosshairObjectVisual(const ObjectVisualDefaultArgs& args, double height = 1.0, double width = 1.0) : ObjectVisual(args)
+        CrosshairPersonVisual(const PersonVisualDefaultArgs& args, double height = 1.0, double width = 1.0) : PersonVisual(args)
         {
             m_width = width; m_height = height; m_lineWidth = 0.03;
             m_crosshair = NULL;
             generateCrosshair();
         }
 
-        virtual ~CrosshairObjectVisual() {
+        virtual ~CrosshairPersonVisual() {
             delete m_crosshair;
         }
 
@@ -253,12 +283,12 @@ namespace tracking_rviz_plugin {
     };
 
 
-    /// Visualization of an object as a mesh
-    class MeshObjectVisual : public ObjectVisual {
+    /// Visualization of a person as a mesh (walking human)
+    class MeshPersonVisual : public PersonVisual {
     public:
-        MeshObjectVisual(const ObjectVisualDefaultArgs& args);
+        MeshPersonVisual(const PersonVisualDefaultArgs& args);
 
-        virtual ~MeshObjectVisual();
+        virtual ~MeshPersonVisual();
 
         virtual void update(float deltaTime);
 
@@ -286,4 +316,4 @@ namespace tracking_rviz_plugin {
 
 }
 
-#endif // OBJECT_VISUAL_H
+#endif // PERSON_VISUAL_H

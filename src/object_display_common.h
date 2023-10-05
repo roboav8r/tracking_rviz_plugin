@@ -1,12 +1,41 @@
+/*
+* Software License Agreement (BSD License)
+*
+*  Copyright (c) 2013-2015, Timm Linder, Social Robotics Lab, University of Freiburg
+*  All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without
+*  modification, are permitted provided that the following conditions are met:
+*
+*  * Redistributions of source code must retain the above copyright notice, this
+*    list of conditions and the following disclaimer.
+*  * Redistributions in binary form must reproduce the above copyright notice,
+*    this list of conditions and the following disclaimer in the documentation
+*    and/or other materials provided with the distribution.
+*  * Neither the name of the copyright holder nor the names of its contributors
+*    may be used to endorse or promote products derived from this software
+*    without specific prior written permission.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+*  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+*  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+*  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+*  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+*  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+*  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+*  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
-#ifndef OBJECT_DISPLAY_COMMON_H
-#define OBJECT_DISPLAY_COMMON_H
+#ifndef PERSON_DISPLAY_COMMON_H
+#define PERSON_DISPLAY_COMMON_H
 
 #ifndef Q_MOC_RUN
 #include <map>
 #include <set>
 #include <boost/circular_buffer.hpp>
-#include <tracking_msgs/Tracks.h>
+#include <spencer_tracking_msgs/TrackedPersons.h>
 #include <geometry_msgs/Twist.h>
 #include <rviz/message_filter_display.h>
 
@@ -26,22 +55,25 @@
 #include <rviz/ogre_helpers/movable_text.h>
 #endif
 
+
+
 using namespace std;
 using namespace boost;
 
 namespace tracking_rviz_plugin
 {
-    typedef unsigned int object_id;
+    typedef unsigned int person_id;
 
-    /// Visualization style 
+    /// Visualization style for a person
     enum Styles {
         STYLE_SIMPLE,
         STYLE_CYLINDER,
-        STYLE_OBJECT_MESHES,
+        STYLE_PERSON_MESHES,
         STYLE_BOUNDING_BOXES,
         STYLE_CROSSHAIRS
     };
 
+    /// How to color persons
     enum ColorTransforms {
         COLORS_SRL,
         COLORS_SRL_ALTERNATIVE,
@@ -52,10 +84,13 @@ namespace tracking_rviz_plugin
         COLORS_CONSTANT,
     };
 
+    /// Which font colors to use
     enum FontColorStyle {
-        FONT_COLOR_FROM_OBJECT,
+        FONT_COLOR_FROM_PERSON,
         FONT_COLOR_CONSTANT
     };
+
+    /// Subclasses of PersonDisplayCommon can override stylesChanged() to get notified when one of the properties in PersonDisplayCommonProperties has changed.
     class StylesChangedSubscriber {
     public:
         virtual ~StylesChangedSubscriber() {}
@@ -63,10 +98,10 @@ namespace tracking_rviz_plugin
     };
 
     /// Common properties shared by multiple displays.
-    class ObjectDisplayCommonProperties : public QObject {
+    class PersonDisplayCommonProperties : public QObject {
     Q_OBJECT
     public:
-        ObjectDisplayCommonProperties(rviz::Display* display, StylesChangedSubscriber* stylesChangedSubscriber);
+        PersonDisplayCommonProperties(rviz::Display* display, StylesChangedSubscriber* stylesChangedSubscriber);
 
         // User-editable property variables.
         rviz::EnumProperty* style;
@@ -86,11 +121,11 @@ namespace tracking_rviz_plugin
         rviz::ColorProperty* constant_font_color;
         rviz::FloatProperty* font_scale;
 
-        rviz::StringProperty* m_excluded_object_ids_property;
-        rviz::StringProperty* m_included_object_ids_property;
+        rviz::StringProperty* m_excluded_person_ids_property;
+        rviz::StringProperty* m_included_person_ids_property;
 
         /// These sets get updated automatically whenever the corresponding properties are updated.
-        set<object_id> m_excludedObjectIDs, m_includedObjectIDs;
+        set<person_id> m_excludedPersonIDs, m_includedPersonIDs;
 
     private:
         rviz::Display* m_display;
@@ -104,19 +139,19 @@ namespace tracking_rviz_plugin
 
     /// A display with common properties that are shared by multiple specializations.
     template<typename MessageType>
-    class ObjectDisplayCommon: public rviz::MessageFilterDisplay<MessageType>, public StylesChangedSubscriber
+    class PersonDisplayCommon: public rviz::MessageFilterDisplay<MessageType>, public StylesChangedSubscriber
     {
     public:
-
+        /// Constructor.  pluginlib::ClassLoader creates instances by calling
         /// the default constructor, so make sure you have one.
-        ObjectDisplayCommon() : m_commonProperties(0), m_veryLargeVariance(99999) {}
-        virtual ~ObjectDisplayCommon() {}
+        PersonDisplayCommon() : m_commonProperties(0), m_veryLargeVariance(99999) {}
+        virtual ~PersonDisplayCommon() {}
 
         /// Overrides base class method
         virtual void onInitialize()
         {
             rviz::MessageFilterDisplay<MessageType>::onInitialize();
-            m_commonProperties = new ObjectDisplayCommonProperties(this, this);
+            m_commonProperties = new PersonDisplayCommonProperties(this, this);
         }
 
     protected:
@@ -135,43 +170,43 @@ namespace tracking_rviz_plugin
             return true;
         }
 
-        /// Create a visual representation of the object, if not set yet
-        void createObjectVisualIfRequired(Ogre::SceneNode* sceneNode, std::shared_ptr<ObjectVisual> &objectVisual)
+        /// Create a visual representation of the person itself, if not set yet
+        void createPersonVisualIfRequired(Ogre::SceneNode* sceneNode, boost::shared_ptr<PersonVisual> &personVisual)
         {
-            if (!objectVisual) {
-                ObjectVisualDefaultArgs defaultArgs(getContext()->getSceneManager(), sceneNode);
-                ObjectVisual* newObjectVisual = 0;
+            if (!personVisual) {
+                PersonVisualDefaultArgs defaultArgs(getContext()->getSceneManager(), sceneNode);
+                PersonVisual* newPersonVisual = 0;
 
-                if (m_commonProperties->style->getOptionInt() == STYLE_CYLINDER) newObjectVisual = new CylinderObjectVisual(defaultArgs);
-                if (m_commonProperties->style->getOptionInt() == STYLE_OBJECT_MESHES) newObjectVisual = new MeshObjectVisual(defaultArgs);
-                if (m_commonProperties->style->getOptionInt() == STYLE_BOUNDING_BOXES) newObjectVisual = new BoundingBoxObjectVisual(defaultArgs);
-                if (m_commonProperties->style->getOptionInt() == STYLE_CROSSHAIRS) newObjectVisual = new CrosshairObjectVisual(defaultArgs);
-                objectVisual.reset(newObjectVisual);
+                if (m_commonProperties->style->getOptionInt() == STYLE_CYLINDER) newPersonVisual = new CylinderPersonVisual(defaultArgs);
+                if (m_commonProperties->style->getOptionInt() == STYLE_PERSON_MESHES) newPersonVisual = new MeshPersonVisual(defaultArgs);
+                if (m_commonProperties->style->getOptionInt() == STYLE_BOUNDING_BOXES) newPersonVisual = new BoundingBoxPersonVisual(defaultArgs);
+                if (m_commonProperties->style->getOptionInt() == STYLE_CROSSHAIRS) newPersonVisual = new CrosshairPersonVisual(defaultArgs);
+                personVisual.reset(newPersonVisual);
             }
 
-            // Update position of the object visual
-            if (objectVisual) {
-                objectVisual->setPosition(Ogre::Vector3(0,0, objectVisual->getHeight() * 0.5));
+            // Update position of the person visual
+            if (personVisual) {
+                personVisual->setPosition(Ogre::Vector3(0,0, personVisual->getHeight() * 0.5));
             }
         }
 
-        /// Applies common styles which apply to visuals, such as line width etc.
-        void applyCommonStyles(std::shared_ptr<ObjectVisual> &objectVisual) {
-            if(!objectVisual) return;
+        /// Applies common styles which apply to person visuals, such as line width etc.
+        void applyCommonStyles(boost::shared_ptr<PersonVisual> &personVisual) {
+            if(!personVisual) return;
 
             // Set line width of wireframe visualization
-            HasLineWidth* hasLineWidth = dynamic_cast<HasLineWidth*>(objectVisual.get());
+            HasLineWidth* hasLineWidth = dynamic_cast<HasLineWidth*>(personVisual.get());
             if(hasLineWidth) {
                 hasLineWidth->setLineWidth(m_commonProperties->line_width->getFloat());
             }
 
             // Set scaling factor
-            objectVisual->setScalingFactor(m_commonProperties->scaling_factor->getFloat());
+            personVisual->setScalingFactor(m_commonProperties->scaling_factor->getFloat());
         }
 
-        // Builds velocity vector for a object from a twist message
+        // Builds velocity vector for a person from a twist message
         Ogre::Vector3 getVelocityVector(const geometry_msgs::TwistWithCovariance& twist) {
-            const double zVelocityVariance = twist.covariance[2 * 6 + 2]; // TODO (JD) - check this calculation
+            const double zVelocityVariance = twist.covariance[2 * 6 + 2];
             const double zVelocity = (isnan(zVelocityVariance) || isinf(zVelocityVariance)) ? 0.0 : twist.twist.linear.z;
             return Ogre::Vector3(twist.twist.linear.x, twist.twist.linear.y, zVelocity);
         }
@@ -203,8 +238,8 @@ namespace tracking_rviz_plugin
             return m_frameRotationMatrix * xyzcov * m_frameRotationMatrix.Transpose(); // cov(AX + a) = A cov(X) A^T
         }
 
-        /// Set pose and orientation of object visual
-        void setPoseOrientation(Ogre::SceneNode* sceneNode, const geometry_msgs::PoseWithCovariance& pose, const Ogre::Matrix3& covXYZinTargetFrame, double objectVisualHeight)
+        /// Set pose and orientation of person visual
+        void setPoseOrientation(Ogre::SceneNode* sceneNode, const geometry_msgs::PoseWithCovariance& pose, const Ogre::Matrix3& covXYZinTargetFrame, double personVisualHeight)
         {
             const geometry_msgs::Point& position = pose.pose.position;
             const geometry_msgs::Quaternion& orientation = pose.pose.orientation;
@@ -214,7 +249,7 @@ namespace tracking_rviz_plugin
 
             Ogre::Vector3 originalPosition(position.x, position.y, position.z);
             if(!isfinite(originalPosition.x) || !isfinite(originalPosition.y) || !isfinite(originalPosition.z)) {
-                ROS_WARN("Detected or tracked object has non-finite position!");
+                ROS_WARN("Detected or tracked person has non-finite position! Something is wrong!");
                 return;
             }
 
@@ -234,7 +269,7 @@ namespace tracking_rviz_plugin
             const double zVariance = covXYZinTargetFrame[2][2];
             bool useActualZPosition = m_commonProperties->use_actual_z_position->getBool() && isfinite(zVariance) && zVariance >= 0 && zVariance < m_veryLargeVariance;
 
-            positionInTargetFrame.z = useActualZPosition ? positionInTargetFrame.z - objectVisualHeight/2.0: 0.0;
+            positionInTargetFrame.z = useActualZPosition ? positionInTargetFrame.z - personVisualHeight/2.0: 0.0;
             positionInTargetFrame.z += m_commonProperties->z_offset->getFloat();
 
             sceneNode->setPosition(positionInTargetFrame);
@@ -251,7 +286,7 @@ namespace tracking_rviz_plugin
             {
                 // SRL People Tracker colors
                 const size_t NUM_SRL_COLORS = 6, NUM_SRL_COLOR_SHADES = 4, NUM_SRL_TOTAL_COLORS = NUM_SRL_COLORS * NUM_SRL_COLOR_SHADES;
-                const unsigned int colors[NUM_SRL_TOTAL_COLORS] = {
+                const unsigned int spencer_colors[NUM_SRL_TOTAL_COLORS] = {
                     0xC00000, 0xFF0000, 0xFF5050, 0xFFA0A0, // red
                     0x00C000, 0x00FF00, 0x50FF50, 0xA0FFA0, // green
                     0x0000C0, 0x0000FF, 0x5050FF, 0xA0A0FF, // blue
@@ -264,13 +299,13 @@ namespace tracking_rviz_plugin
                 const unsigned int tableId = object_id % NUM_SRL_TOTAL_COLORS;
                 if(m_commonProperties->color_transform->getOptionInt() == COLORS_SRL) {
                     // Colors in original order (first vary shade, then vary color)
-                    rgb = colors[tableId];
+                    rgb = spencer_colors[tableId];
                 }
                 else if(m_commonProperties->color_transform->getOptionInt() == COLORS_SRL_ALTERNATIVE) {
                     // Colors in alternative order (first vary color, then vary shade)
                     unsigned int shadeIndex = tableId / NUM_SRL_COLORS;
                     unsigned int colorIndex = tableId % NUM_SRL_COLORS;
-                    rgb = colors[colorIndex * NUM_SRL_COLOR_SHADES + shadeIndex];
+                    rgb = spencer_colors[colorIndex * NUM_SRL_COLOR_SHADES + shadeIndex];
                 }
 
                 float r = ((rgb >> 16) & 0xff) / 255.0f,
@@ -317,20 +352,20 @@ namespace tracking_rviz_plugin
             return color;
         }
 
-        /// Checks if an object shall be hidden (can be set using include/exclude object ID properties in GUI)
-        bool isObjectHidden(object_id objectId)
+        /// Checks if a person shall be hidden (can be set using include/exclude person ID properties in GUI)
+        bool isPersonHidden(person_id personId)
         {
-            bool isIncluded = m_commonProperties->m_includedObjectIDs.find(objectId) != m_commonProperties->m_includedObjectIDs.end();
+            bool isIncluded = m_commonProperties->m_includedPersonIDs.find(personId) != m_commonProperties->m_includedPersonIDs.end();
             if(isIncluded) return false;
-            if(!m_commonProperties->m_includedObjectIDs.empty()) return true;
-            return m_commonProperties->m_excludedObjectIDs.find(objectId) != m_commonProperties->m_excludedObjectIDs.end();
+            if(!m_commonProperties->m_includedPersonIDs.empty()) return true;
+            return m_commonProperties->m_excludedPersonIDs.find(personId) != m_commonProperties->m_excludedPersonIDs.end();
         }
 
         /// Must be implemented by derived classes because MOC doesn't work in templates
         virtual rviz::DisplayContext* getContext() = 0;
 
         /// Common properties for the displays in this plugin
-        ObjectDisplayCommonProperties* m_commonProperties;
+        PersonDisplayCommonProperties* m_commonProperties;
 
     protected:
         Ogre::Quaternion m_frameOrientation;
@@ -341,4 +376,4 @@ namespace tracking_rviz_plugin
 } // end namespace tracking_rviz_plugin
 
 
-#endif // OBJECT_DISPLAY_COMMON_H
+#endif // PERSON_DISPLAY_COMMON_H

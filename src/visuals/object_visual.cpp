@@ -1,13 +1,43 @@
-#include <rviz/mesh_loader.h>
+/*
+* Software License Agreement (BSD License)
+*
+*  Copyright (c) 2013-2015, Timm Linder, Social Robotics Lab, University of Freiburg
+*  All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without
+*  modification, are permitted provided that the following conditions are met:
+*
+*  * Redistributions of source code must retain the above copyright notice, this
+*    list of conditions and the following disclaimer.
+*  * Redistributions in binary form must reproduce the above copyright notice,
+*    this list of conditions and the following disclaimer in the documentation
+*    and/or other materials provided with the distribution.
+*  * Neither the name of the copyright holder nor the names of its contributors
+*    may be used to endorse or promote products derived from this software
+*    without specific prior written permission.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+*  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+*  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+*  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+*  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+*  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+*  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+*  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
+
+#include <rviz/mesh_loader.h>
 #ifndef Q_MOC_RUN
 #include <ros/console.h>
 #include <ros/package.h>
 #include <resource_retriever/retriever.h>
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #endif
-
 #include <OgreSceneManager.h>
 #include <OgreSubEntity.h>
 #include <OgreMaterialManager.h>
@@ -61,7 +91,7 @@ private:
 
 
 
-MeshObjectVisual::MeshObjectVisual(const ObjectVisualDefaultArgs& args) : ObjectVisual(args), m_animationState(NULL), m_walkingSpeed(1.0), entity_(NULL)
+MeshPersonVisual::MeshPersonVisual(const PersonVisualDefaultArgs& args) : PersonVisual(args), m_animationState(NULL), m_walkingSpeed(1.0), entity_(NULL)
 {
     m_childSceneNode = m_sceneNode->createChildSceneNode();
     m_childSceneNode->setVisible(false);
@@ -85,7 +115,7 @@ MeshObjectVisual::MeshObjectVisual(const ObjectVisualDefaultArgs& args) : Object
     // Create scene entity
     static size_t count = 0;
     std::stringstream ss;
-    ss << "mesh__visual" << count++;
+    ss << "mesh_person_visual" << count++;
     std::string id = ss.str();
 
     entity_ = m_sceneManager->createEntity(id, meshResource);
@@ -115,7 +145,7 @@ MeshObjectVisual::MeshObjectVisual(const ObjectVisualDefaultArgs& args) : Object
     m_childSceneNode->setVisible(true);
 }
 
-MeshObjectVisual::~MeshObjectVisual() {
+MeshPersonVisual::~MeshPersonVisual() {
     m_sceneManager->destroyEntity( entity_ );
 
     // destroy all the materials we've created
@@ -134,7 +164,7 @@ MeshObjectVisual::~MeshObjectVisual() {
     m_sceneManager->destroySceneNode(m_childSceneNode->getName());
 }
 
-void MeshObjectVisual::setColor(const Ogre::ColourValue& c) {
+void MeshPersonVisual::setColor(const Ogre::ColourValue& c) {
     Ogre::SceneBlendType blending;
     bool depth_write;
 
@@ -162,7 +192,7 @@ void MeshObjectVisual::setColor(const Ogre::ColourValue& c) {
     }
 }
 
-void MeshObjectVisual::setAnimationState(const std::string& nameOfAnimationState) {
+void MeshPersonVisual::setAnimationState(const std::string& nameOfAnimationState) {
     Ogre::AnimationStateSet *animationStates = entity_->getAllAnimationStates();
     if(animationStates != NULL)
     {
@@ -179,17 +209,17 @@ void MeshObjectVisual::setAnimationState(const std::string& nameOfAnimationState
       }
 
       // Not found. Set first animation state then.
-      ROS_WARN_STREAM_ONCE("Object mesh animation state " << nameOfAnimationState << " does not exist in mesh!");
+      ROS_WARN_STREAM_ONCE("Person mesh animation state " << nameOfAnimationState << " does not exist in mesh!");
       setAnimationState("");
     }
 }
 
-void MeshObjectVisual::setWalkingSpeed(float walkingSpeed) {
+void MeshPersonVisual::setWalkingSpeed(float walkingSpeed) {
     m_walkingSpeed = walkingSpeed;
 }
 
 
-void MeshObjectVisual::update(float deltaTime) {
+void MeshPersonVisual::update(float deltaTime) {
     if(m_animationState) {
         m_animationState->addTime(0.7 * deltaTime * m_walkingSpeed);
     }

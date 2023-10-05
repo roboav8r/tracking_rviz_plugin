@@ -1,24 +1,10 @@
 <library path="lib/libtracking_rviz_plugin">
 
-  <class name="tracking_rviz_plugin/DetectedObjectsPos" type="tracking_rviz_plugin::DetectedObjectsPosDisplay" base_class_type="rviz::Display">
+  <class name="tracking_rviz_plugin/DetectedPersons" type="tracking_rviz_plugin::DetectedPersonsDisplay" base_class_type="rviz::Display">
     <description>
-      Displays detected objects from tracking_msgs/PosDetections messages.
+      Displays detected persons from spencer_tracking_msgs/DetectedPersons messages.
     </description>
-    <message_type>tracking_msgs/PosDetections</message_type>
+    <message_type>spencer_tracking_msgs/DetectedPersons</message_type>
   </class>
-  
-  <!-- <class name="tracking_rviz_plugin/TrackedObjects" type="tracking_rviz_plugin::TrackedObjectsDisplay" base_class_type="rviz::Display">
-    <description>
-      Displays tracked objects from tracking_msgs/Tracks messages.
-    </description>
-    <message_type>tracking_msgs/Tracks</message_type>
-  </class>
-
-  <class name="tracking_rviz_plugin/ObjectTrajectories" type="tracking_rviz_plugin::ObjectTrajectoriesDisplay" base_class_type="rviz::Display">
-    <description>
-      Displays object trajectories from tracking_msgs/Trajectories messages.
-    </description>
-    <message_type>tracking_msgs/Trajectories</message_type>
-  </class> -->
 
 </library>
