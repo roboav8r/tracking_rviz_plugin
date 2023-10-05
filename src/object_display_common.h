@@ -286,7 +286,7 @@ namespace tracking_rviz_plugin
             {
                 // SRL People Tracker colors
                 const size_t NUM_SRL_COLORS = 6, NUM_SRL_COLOR_SHADES = 4, NUM_SRL_TOTAL_COLORS = NUM_SRL_COLORS * NUM_SRL_COLOR_SHADES;
-                const unsigned int spencer_colors[NUM_SRL_TOTAL_COLORS] = {
+                const unsigned int colors[NUM_SRL_TOTAL_COLORS] = {
                     0xC00000, 0xFF0000, 0xFF5050, 0xFFA0A0, // red
                     0x00C000, 0x00FF00, 0x50FF50, 0xA0FFA0, // green
                     0x0000C0, 0x0000FF, 0x5050FF, 0xA0A0FF, // blue
@@ -299,13 +299,13 @@ namespace tracking_rviz_plugin
                 const unsigned int tableId = object_id % NUM_SRL_TOTAL_COLORS;
                 if(m_commonProperties->color_transform->getOptionInt() == COLORS_SRL) {
                     // Colors in original order (first vary shade, then vary color)
-                    rgb = spencer_colors[tableId];
+                    rgb = colors[tableId];
                 }
                 else if(m_commonProperties->color_transform->getOptionInt() == COLORS_SRL_ALTERNATIVE) {
                     // Colors in alternative order (first vary color, then vary shade)
                     unsigned int shadeIndex = tableId / NUM_SRL_COLORS;
                     unsigned int colorIndex = tableId % NUM_SRL_COLORS;
-                    rgb = spencer_colors[colorIndex * NUM_SRL_COLOR_SHADES + shadeIndex];
+                    rgb = colors[colorIndex * NUM_SRL_COLOR_SHADES + shadeIndex];
                 }
 
                 float r = ((rgb >> 16) & 0xff) / 255.0f,
