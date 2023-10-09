@@ -1,33 +1,3 @@
-/*
-* Software License Agreement (BSD License)
-*
-*  Copyright (c) 2013-2015, Timm Linder, Social Robotics Lab, University of Freiburg
-*  All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions are met:
-*
-*  * Redistributions of source code must retain the above copyright notice, this
-*    list of conditions and the following disclaimer.
-*  * Redistributions in binary form must reproduce the above copyright notice,
-*    this list of conditions and the following disclaimer in the documentation
-*    and/or other materials provided with the distribution.
-*  * Neither the name of the copyright holder nor the names of its contributors
-*    may be used to endorse or promote products derived from this software
-*    without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-*  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-*  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-*  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-*  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-*  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-*  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-*  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 #include <rviz/visualization_manager.h>
 #include <rviz/frame_manager.h>
 #include "rviz/selection/selection_manager.h"
@@ -52,6 +22,7 @@ void DetectedObjectsDisplay::onInitialize()
     m_render_covariances_property       = new rviz::BoolProperty( "Render covariances", true, "Render track covariance ellipses", this, SLOT(stylesChanged()) );
     m_render_detection_ids_property     = new rviz::BoolProperty( "Render detection IDs", true, "Render IDs of the detection that a track was matched against, if any", this, SLOT(stylesChanged()));
     m_render_class_ids_property     = new rviz::BoolProperty( "Render class IDs", true, "Render class IDs of the detection, if any", this, SLOT(stylesChanged()));
+    m_render_class_str_property     = new rviz::BoolProperty( "Render class string", true, "Render class string of the detection, if any", this, SLOT(stylesChanged()));
     m_render_confidences_property       = new rviz::BoolProperty( "Render confidences", false, "Render detection confidences", this, SLOT(stylesChanged()));
     // m_render_orientations_property      = new rviz::BoolProperty( "Render orientation arrows", true, "Render orientation arrows (only if orientation covariances are finite!)", this, SLOT(stylesChanged()));
     m_render_modality_text_property     = new rviz::BoolProperty( "Render modality text", false, "Render detection modality as text below detected object", this, SLOT(stylesChanged()));
@@ -113,29 +84,42 @@ void DetectedObjectsDisplay::stylesChanged()
         if(objectHidden) fontColor.a = 0.0;
         
         float textOffset = 0.0f;
-        detectedObjectVisual->detectionIdText->setCharacterHeight(0.18 * m_commonProperties->font_scale->getFloat());
-        detectedObjectVisual->detectionIdText->setPosition(Ogre::Vector3(0,0, -0.5*detectedObjectVisual->detectionIdText->getCharacterHeight() - textOffset));
-        detectedObjectVisual->detectionIdText->setVisible(m_render_detection_ids_property->getBool());
-        detectedObjectVisual->detectionIdText->setColor(fontColor);
-        if(m_render_detection_ids_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->detectionIdText->getCharacterHeight();
-
         detectedObjectVisual->classIdText->setCharacterHeight(0.18 * m_commonProperties->font_scale->getFloat());
         detectedObjectVisual->classIdText->setPosition(Ogre::Vector3(0,0, -0.5*detectedObjectVisual->classIdText->getCharacterHeight() - textOffset));
-        detectedObjectVisual->classIdText->setVisible(m_render_detection_ids_property->getBool());
+        detectedObjectVisual->classIdText->setVisible(m_render_class_ids_property->getBool());
         detectedObjectVisual->classIdText->setColor(fontColor);
         if(m_render_class_ids_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->classIdText->getCharacterHeight();
 
-        detectedObjectVisual->classConfidenceText->setCharacterHeight(0.13 * m_commonProperties->font_scale->getFloat());
-        detectedObjectVisual->classConfidenceText->setPosition(Ogre::Vector3(0, 0, -0.5*detectedObjectVisual->classConfidenceText->getCharacterHeight() - textOffset));
-        detectedObjectVisual->classConfidenceText->setVisible(m_render_confidences_property->getBool());
-        detectedObjectVisual->classConfidenceText->setColor(fontColor);
-        if(m_render_confidences_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->classConfidenceText->getCharacterHeight();
+        detectedObjectVisual->classStrText->setCharacterHeight(0.18 * m_commonProperties->font_scale->getFloat());
+        detectedObjectVisual->classStrText->setPosition(Ogre::Vector3(0,0, -0.5*detectedObjectVisual->classStrText->getCharacterHeight() - textOffset));
+        detectedObjectVisual->classStrText->setVisible(m_render_class_str_property->getBool());
+        detectedObjectVisual->classStrText->setColor(fontColor);
+        if(m_render_class_str_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->classStrText->getCharacterHeight();
 
-        detectedObjectVisual->modalityText->setCharacterHeight(0.125 * m_commonProperties->font_scale->getFloat());
-        detectedObjectVisual->modalityText->setPosition(Ogre::Vector3(textOffset, 0, -0.5*detectedObjectVisual->modalityText->getCharacterHeight() - textOffset));
-        detectedObjectVisual->modalityText->setVisible(m_render_modality_text_property->getBool());
-        detectedObjectVisual->modalityText->setColor(fontColor);
-        if(m_render_modality_text_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->modalityText->getCharacterHeight();
+        // detectedObjectVisual->classConfidenceText->setCharacterHeight(0.13 * m_commonProperties->font_scale->getFloat());
+        // detectedObjectVisual->classConfidenceText->setPosition(Ogre::Vector3(0, 0, -0.5*detectedObjectVisual->classConfidenceText->getCharacterHeight() - textOffset));
+        // detectedObjectVisual->classConfidenceText->setVisible(m_render_confidences_property->getBool());
+        // detectedObjectVisual->classConfidenceText->setColor(fontColor);
+        // if(m_render_confidences_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->classConfidenceText->getCharacterHeight();
+
+        detectedObjectVisual->modDetText->setCharacterHeight(0.125 * m_commonProperties->font_scale->getFloat());
+        detectedObjectVisual->modDetText->setPosition(Ogre::Vector3(textOffset, 0, -0.5*detectedObjectVisual->modDetText->getCharacterHeight() - textOffset));
+        detectedObjectVisual->modDetText->setVisible(m_render_modality_text_property->getBool()||m_render_detection_ids_property->getBool());
+        detectedObjectVisual->modDetText->setColor(fontColor);
+        if(m_render_modality_text_property->getBool()||m_render_detection_ids_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->modDetText->getCharacterHeight();
+
+        // detectedObjectVisual->modalityText->setCharacterHeight(0.125 * m_commonProperties->font_scale->getFloat());
+        // detectedObjectVisual->modalityText->setPosition(Ogre::Vector3(textOffset, 0, -0.5*detectedObjectVisual->modalityText->getCharacterHeight() - textOffset));
+        // detectedObjectVisual->modalityText->setVisible(m_render_modality_text_property->getBool());
+        // detectedObjectVisual->modalityText->setColor(fontColor);
+        // if(m_render_modality_text_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->modalityText->getCharacterHeight();
+
+        // detectedObjectVisual->detectionIdText->setCharacterHeight(0.18 * m_commonProperties->font_scale->getFloat());
+        // detectedObjectVisual->detectionIdText->setPosition(Ogre::Vector3(0,0, -0.5*detectedObjectVisual->detectionIdText->getCharacterHeight() - textOffset));
+        // detectedObjectVisual->detectionIdText->setVisible(m_render_detection_ids_property->getBool());
+        // detectedObjectVisual->detectionIdText->setColor(fontColor);
+        // if(m_render_detection_ids_property->getBool()) textOffset += m_text_spacing_property->getFloat() * detectedObjectVisual->detectionIdText->getCharacterHeight();
+
 
         // Set color of covariance visualization
         Ogre::ColourValue covarianceColor = detectionColor;
@@ -178,6 +162,7 @@ void DetectedObjectsDisplay::processMessage(const tracking_msgs::DetectedObjects
         detectedObjectVisual->sceneNode = boost::shared_ptr<Ogre::SceneNode>(scene_node_->createChildSceneNode());
         detectedObjectVisual->detectionId = detectedObjectIt->detection_id;
         detectedObjectVisual->classId = detectedObjectIt->class_id;
+        detectedObjectVisual->classStr = detectedObjectIt->class_string;
         detectedObjectVisual->classConfidence = detectedObjectIt->class_confidence;
         Ogre::SceneNode* currentSceneNode = detectedObjectVisual->sceneNode.get();
 
@@ -205,41 +190,64 @@ void DetectedObjectsDisplay::processMessage(const tracking_msgs::DetectedObjects
         // Texts
         //
         {
-            // Detection ID
-            if (!detectedObjectVisual->detectionIdText) {
-                detectedObjectVisual->detectionIdText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
-                detectedObjectVisual->detectionIdText->showOnTop();
-            }
-
-            ss.str(""); ss << "Det " << detectedObjectIt->detection_id;
-            detectedObjectVisual->detectionIdText->setCaption(ss.str());
-
             // Class ID
             if (!detectedObjectVisual->classIdText) {
                 detectedObjectVisual->classIdText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
                 detectedObjectVisual->classIdText->showOnTop();
             }
 
-            ss.str(""); ss << "Class " << detectedObjectIt->class_id;
+            ss.str(""); ss << "Class # " << detectedObjectIt->class_id;
+            if(m_render_confidences_property->getBool()) {ss << " ["<< fixed << setprecision(2) << detectedObjectIt->class_confidence << "%]";}
             detectedObjectVisual->classIdText->setCaption(ss.str());
 
-            // Confidence value
-            if (!detectedObjectVisual->classConfidenceText) {
-                detectedObjectVisual->classConfidenceText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
+            // Class string
+            if (!detectedObjectVisual->classStrText) {
+                detectedObjectVisual->classStrText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
+                detectedObjectVisual->classStrText->showOnTop();
             }
 
-            ss.str(""); ss << "["<< fixed << setprecision(2) << detectedObjectIt->class_confidence << "%]";
-            detectedObjectVisual->classConfidenceText->setCaption(ss.str());
-            detectedObjectVisual->classConfidenceText->showOnTop();
+            ss.str(""); ss << detectedObjectIt->class_string;
+            if(m_render_confidences_property->getBool()) {ss << " ["<< fixed << setprecision(2) << detectedObjectIt->class_confidence << "%]";}
+            detectedObjectVisual->classStrText->setCaption(ss.str());
 
-            // Modality text
-            if (!detectedObjectVisual->modalityText) {
-                detectedObjectVisual->modalityText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
+            // // Confidence value
+            // if (!detectedObjectVisual->classConfidenceText) {
+            //     detectedObjectVisual->classConfidenceText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
+            // }
+
+            // ss.str(""); ss << "["<< fixed << setprecision(2) << detectedObjectIt->class_confidence << "%]";
+            // detectedObjectVisual->classConfidenceText->setCaption(ss.str());
+            // detectedObjectVisual->classConfidenceText->showOnTop();
+
+            // Modality + detection text
+            if (!detectedObjectVisual->modDetText) {
+                detectedObjectVisual->modDetText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
             }
 
-            ss.str(""); ss << msg->sensor_name;
-            detectedObjectVisual->modalityText->setCaption(ss.str());
-            detectedObjectVisual->modalityText->showOnTop();
+            ss.str("");
+            if(m_render_modality_text_property->getBool()){ss << msg->sensor_name;}
+            if(m_render_detection_ids_property->getBool()){ss << " det #" << detectedObjectIt->detection_id;}
+            detectedObjectVisual->modDetText->setCaption(ss.str());
+            detectedObjectVisual->modDetText->showOnTop();
+
+            // // Modality text
+            // if (!detectedObjectVisual->modalityText) {
+            //     detectedObjectVisual->modalityText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
+            // }
+
+            // ss.str(""); ss << msg->sensor_name;
+            // detectedObjectVisual->modalityText->setCaption(ss.str());
+            // detectedObjectVisual->modalityText->showOnTop();
+
+            // // Detection ID
+            // if (!detectedObjectVisual->detectionIdText) {
+            //     detectedObjectVisual->detectionIdText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
+            //     detectedObjectVisual->detectionIdText->showOnTop();
+            // }
+
+            // ss.str(""); ss << "Det # " << detectedObjectIt->detection_id;
+            // detectedObjectVisual->detectionIdText->setCaption(ss.str());
+
         }
 
         //
