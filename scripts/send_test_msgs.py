@@ -71,9 +71,9 @@ def createTrackAndDetection( tracks, detections, track_id, detection_id, angle, 
     return
 
 # Main code
-trackTopic = 'tracked_objects'
+trackTopic = 'tracked_objects_test'
 trackPublisher = rospy.Publisher( trackTopic, TrackedPersons )
-observationTopic = 'detected_objects' 
+observationTopic = 'detected_objects_test' 
 observationPublisher = rospy.Publisher( observationTopic, DetectedObjects )
 
 rospy.init_node( 'publish_test_tracks_and_detections' )

@@ -28,13 +28,14 @@
 *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef TRACKED_PERSONS_DISPLAY_H
-#define TRACKED_PERSONS_DISPLAY_H
+#ifndef TRACKED_OBJECTS_DISPLAY_H
+#define TRACKED_OBJECTS_DISPLAY_H
 
 #ifndef Q_MOC_RUN
 #include <map>
 #include <boost/circular_buffer.hpp>
-#include <spencer_tracking_msgs/TrackedPersons.h>
+// #include <spencer_tracking_msgs/TrackedPersons.h>
+#include <tracking_msgs/TrackedObjects.h>
 #include "object_display_common.h"
 #endif
 
@@ -47,7 +48,7 @@ namespace tracking_rviz_plugin
     {
         Ogre::Vector3 position;
         boost::shared_ptr<rviz::Shape> shape;
-        bool wasOccluded;
+        // bool wasOccluded;
         track_id trackId;
     };
 
@@ -70,13 +71,14 @@ namespace tracking_rviz_plugin
 
         Ogre::Matrix4 lastObservedPose;
 
-        bool isOccluded, isDeleted, isMissed, hasZeroVelocity;
+        // bool isOccluded, isDeleted, isMissed, hasZeroVelocity;
+        bool isDeleted, isMissed, hasZeroVelocity;
         int numCyclesNotSeen;
     };
 
     // The TrackedObjectsDisplay class itself just implements a circular buffer,
     // editable parameters, and Display subclass machinery.
-    class TrackedObjectsDisplay: public ObjectDisplayCommon<spencer_tracking_msgs::TrackedPersons>
+    class TrackedObjectsDisplay: public ObjectDisplayCommon<tracking_msgs::TrackedObjects>
     {
     Q_OBJECT
     public:
@@ -114,7 +116,7 @@ namespace tracking_rviz_plugin
 
     private:
         // Function to handle an incoming ROS message.
-        void processMessage(const spencer_tracking_msgs::TrackedPersons::ConstPtr& msg);
+        void processMessage(const tracking_msgs::TrackedObjects::ConstPtr& msg);
        
         // All currently active tracks, with unique track ID as map key
         typedef map<track_id, boost::shared_ptr<TrackedObjectVisual> > track_map;
@@ -132,7 +134,7 @@ namespace tracking_rviz_plugin
         rviz::IntProperty*   m_delete_after_ncycles_property;
 
         rviz::BoolProperty* m_show_deleted_property;
-        rviz::BoolProperty* m_show_occluded_property;
+        // rviz::BoolProperty* m_show_occluded_property;
         rviz::BoolProperty* m_show_missed_property;
         rviz::BoolProperty* m_show_matched_property;
     
@@ -153,4 +155,4 @@ namespace tracking_rviz_plugin
 
 } // end namespace tracking_rviz_plugin
 
-#endif // TRACKED_PERSONS_DISPLAY_H
+#endif // TRACKED_OBJECTS_DISPLAY_H

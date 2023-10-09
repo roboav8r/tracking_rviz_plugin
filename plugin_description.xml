@@ -11,7 +11,7 @@
     <description>
       Displays tracked objects from spencer_tracking_msgs/TrackedPersons messages.
     </description>
-    <message_type>spencer_tracking_msgs/TrackedPersons</message_type>
+    <message_type>tracking_msgs/TrackedObjects</message_type>
   </class>
 
 </library>

@@ -52,8 +52,8 @@ void TrackedObjectsDisplay::onInitialize()
 
     QObject::connect(m_commonProperties->style, SIGNAL(changed()), this, SLOT(objectVisualTypeChanged()) );
 
-    m_occlusion_alpha_property = new rviz::FloatProperty( "Occlusion alpha", 0.3, "Alpha multiplier for occluded tracks", this, SLOT(stylesChanged()) );
-    m_occlusion_alpha_property->setMin( 0.0 );
+    // m_occlusion_alpha_property = new rviz::FloatProperty( "Occlusion alpha", 0.3, "Alpha multiplier for occluded tracks", this, SLOT(stylesChanged()) );
+    // m_occlusion_alpha_property->setMin( 0.0 );
 
     m_missed_alpha_property = new rviz::FloatProperty( "Missed alpha", 0.5, "Alpha multiplier for missed tracks", this, SLOT(stylesChanged()) );
     m_missed_alpha_property->setMin( 0.0 );
@@ -69,7 +69,7 @@ void TrackedObjectsDisplay::onInitialize()
     m_delete_after_ncycles_property->setMax( 10000000 );
 
     m_show_deleted_property   = new rviz::BoolProperty( "Show DELETED tracks", false, "Show tracks which have been marked as deleted", this, SLOT(stylesChanged()));
-    m_show_occluded_property  = new rviz::BoolProperty( "Show OCCLUDED tracks", true, "Show tracks which could not be matched to an detection due to sensor occlusion", this, SLOT(stylesChanged()));
+    // m_show_occluded_property  = new rviz::BoolProperty( "Show OCCLUDED tracks", true, "Show tracks which could not be matched to an detection due to sensor occlusion", this, SLOT(stylesChanged()));
     m_show_missed_property   = new rviz::BoolProperty( "Show MISSED tracks", true, "Show tracks which could not be matched to an detection but should be observable by the sensor", this, SLOT(stylesChanged()));
     m_show_matched_property   = new rviz::BoolProperty( "Show MATCHED tracks", true, "Show tracks which could be matched to an detection", this, SLOT(stylesChanged()));
 
@@ -153,7 +153,7 @@ void TrackedObjectsDisplay::stylesChanged()
         bool trackVisible = !isObjectHidden(trackId);
 
         if (trackedObjectVisual->isDeleted) trackVisible &= m_show_deleted_property->getBool();
-        else if(trackedObjectVisual->isOccluded) trackVisible &= m_show_occluded_property->getBool();
+        // else if(trackedObjectVisual->isOccluded) trackVisible &= m_show_occluded_property->getBool();
         else if(trackedObjectVisual->isMissed) trackVisible &= m_show_missed_property->getBool();
         else trackVisible &= m_show_matched_property->getBool();
 
@@ -165,7 +165,7 @@ void TrackedObjectsDisplay::stylesChanged()
         Ogre::ColourValue trackColorWithFullAlpha = getColorFromId(trackId);
         Ogre::ColourValue trackColor = getColorFromId(trackId);
         trackColor.a *= m_commonProperties->alpha->getFloat(); // general alpha
-        if(trackedObjectVisual->isOccluded) trackColor.a *= m_occlusion_alpha_property->getFloat(); // occlusion alpha
+        // if(trackedObjectVisual->isOccluded) trackColor.a *= m_occlusion_alpha_property->getFloat(); // occlusion alpha
         if(trackedObjectVisual->isMissed) trackColor.a *= m_missed_alpha_property->getFloat(); // occlusion alpha
 
         // Update object color
@@ -184,7 +184,7 @@ void TrackedObjectsDisplay::stylesChanged()
             const double historyShapeDiameter = 0.1;
             Ogre::ColourValue historyColor = trackColorWithFullAlpha;
             historyColor.a *= m_commonProperties->alpha->getFloat(); // general alpha
-            if(historyEntry->wasOccluded) historyColor.a *= m_occlusion_alpha_property->getFloat();
+            // if(historyEntry->wasOccluded) historyColor.a *= m_occlusion_alpha_property->getFloat();
             if(isObjectHidden(trackId) || m_render_history_as_line_property->getBool()) historyColor.a = 0;
 
             if(historyEntry->shape) {
@@ -206,7 +206,8 @@ void TrackedObjectsDisplay::stylesChanged()
         fontColor.a = m_commonProperties->alpha->getFloat();
 
         trackedObjectVisual->detectionIdText->setCharacterHeight(0.18 * m_commonProperties->font_scale->getFloat());
-        trackedObjectVisual->detectionIdText->setVisible(!trackedObjectVisual->isOccluded && m_render_detection_ids_property->getBool() && trackVisible);
+        // trackedObjectVisual->detectionIdText->setVisible(!trackedObjectVisual->isOccluded && m_render_detection_ids_property->getBool() && trackVisible);
+        trackedObjectVisual->detectionIdText->setVisible(m_render_detection_ids_property->getBool() && trackVisible);
         trackedObjectVisual->detectionIdText->setColor(fontColor);
         trackedObjectVisual->detectionIdText->setPosition(Ogre::Vector3(0,0, -trackedObjectVisual->detectionIdText->getCharacterHeight()));
 
@@ -251,7 +252,7 @@ void TrackedObjectsDisplay::objectVisualTypeChanged()
 }
 
 // This is our callback to handle an incoming message.
-void TrackedObjectsDisplay::processMessage(const spencer_tracking_msgs::TrackedPersons::ConstPtr& msg)
+void TrackedObjectsDisplay::processMessage(const tracking_msgs::TrackedObjects::ConstPtr& msg)
 {
     // Get transforms into fixed frame etc.
     if(!preprocessMessage(msg)) return;
@@ -269,13 +270,13 @@ void TrackedObjectsDisplay::processMessage(const spencer_tracking_msgs::TrackedP
     // Iterate over all tracks in this message, see if we have a cached visual (then update it) or create a new one.
     //
     set<unsigned int> encounteredTrackIds;
-    for (vector<spencer_tracking_msgs::TrackedPerson>::const_iterator trackedObjectIt = msg->tracks.begin(); trackedObjectIt != msg->tracks.end(); ++trackedObjectIt)
+    for (vector<tracking_msgs::TrackedObject>::const_iterator trackedObjectIt = msg->tracks.begin(); trackedObjectIt != msg->tracks.end(); ++trackedObjectIt)
     {
         boost::shared_ptr<TrackedObjectVisual> trackedObjectVisual;
 
         // See if we encountered this track ID before in this loop (means duplicate track ID)
         if (encounteredTrackIds.find(trackedObjectIt->track_id) != encounteredTrackIds.end()) {
-            ROS_ERROR_STREAM("spencer_tracking_msgs::TrackedPersons contains duplicate track ID " << trackedObjectIt->track_id << "! Skipping duplicate track.");
+            ROS_ERROR_STREAM("tracking_msgs::TrackedObjects contains duplicate track ID " << trackedObjectIt->track_id << "! Skipping duplicate track.");
             continue;
         }
         else {
@@ -298,18 +299,19 @@ void TrackedObjectsDisplay::processMessage(const spencer_tracking_msgs::TrackedP
         }
 
         // These values need to be remembered for later use in stylesChanged()
-        if(trackedObjectIt->is_occluded && !trackedObjectIt->is_matched){
-            trackedObjectVisual->isOccluded = true;
-            trackedObjectVisual->isMissed = false;
-        }
-        else if(!trackedObjectIt->is_occluded && !trackedObjectIt->is_matched){
-            trackedObjectVisual->isOccluded = false;
-            trackedObjectVisual->isMissed = true;
-        }
-        else {
-            trackedObjectVisual->isOccluded = false;
-            trackedObjectVisual->isMissed = false;
-        }
+        trackedObjectVisual->isMissed = !trackedObjectIt->matched;
+        // if(trackedObjectIt->is_occluded && !trackedObjectIt->is_matched){
+        //     trackedObjectVisual->isOccluded = true;
+        //     trackedObjectVisual->isMissed = false;
+        // }
+        // else if(!trackedObjectIt->is_occluded && !trackedObjectIt->is_matched){
+        //     trackedObjectVisual->isOccluded = false;
+        //     trackedObjectVisual->isMissed = true;
+        // }
+        // else {
+        //     trackedObjectVisual->isOccluded = false;
+        //     trackedObjectVisual->isMissed = false;
+        // }
 
         trackedObjectVisual->isDeleted = false;
         trackedObjectVisual->numCyclesNotSeen = 0;
@@ -350,7 +352,7 @@ void TrackedObjectsDisplay::processMessage(const spencer_tracking_msgs::TrackedP
             boost::shared_ptr<TrackedObjectHistoryEntry> newHistoryEntry(new TrackedObjectHistoryEntry);
             newHistoryEntry->trackId = trackedObjectIt->track_id;
             newHistoryEntry->position = newHistoryEntryPosition; // used by history lines (below) even if no shape is set
-            newHistoryEntry->wasOccluded = trackedObjectIt->is_occluded;
+            // newHistoryEntry->wasOccluded = trackedObjectIt->is_occluded;
             trackedObjectVisual->history.push_back(newHistoryEntry);
 
             // Always need to reset history line since history is like a queue, oldest element has to be removed but BillboardLine doesn't offer that functionality
@@ -396,9 +398,10 @@ void TrackedObjectsDisplay::processMessage(const spencer_tracking_msgs::TrackedP
             // Track state
             ss.str("");
 
-            if(trackedObjectIt->is_occluded && !trackedObjectIt->is_matched)
-                ss << "OCCLUDED";
-            else if (!trackedObjectIt->is_occluded && !trackedObjectIt->is_matched)
+            // if(trackedObjectIt->is_occluded && !trackedObjectIt->is_matched)
+            //     ss << "OCCLUDED";
+            // else if (!trackedObjectIt->is_occluded && !trackedObjectIt->is_matched)
+            if (!trackedObjectIt->matched)
                 ss << "MISSED";
             else
                 ss << "MATCHED";
