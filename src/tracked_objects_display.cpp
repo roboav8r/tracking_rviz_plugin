@@ -299,7 +299,13 @@ void TrackedObjectsDisplay::processMessage(const tracking_msgs::TrackedObjects::
         }
 
         // These values need to be remembered for later use in stylesChanged()
-        trackedObjectVisual->isMissed = !trackedObjectIt->matched;
+        if(!trackedObjectIt->matched){
+            trackedObjectVisual->isMissed = true;
+        }
+        else {
+            trackedObjectVisual->isMissed = false;
+        }
+
         // if(trackedObjectIt->is_occluded && !trackedObjectIt->is_matched){
         //     trackedObjectVisual->isOccluded = true;
         //     trackedObjectVisual->isMissed = false;

@@ -98,7 +98,7 @@ void DetectedObjectsDisplay::stylesChanged()
         applyCommonStyles(detectedObjectVisual->objectVisual);
 
         // Get current detection color
-        Ogre::ColourValue detectionColor = getColorFromId(detectedObjectVisual->detectionId);
+        Ogre::ColourValue detectionColor = getColorFromId(detectedObjectVisual->classId);
         detectionColor.a *= m_commonProperties->alpha->getFloat(); // general alpha
         if(objectHidden) detectionColor.a = 0.0;
         if(detectedObjectVisual->classConfidence < m_low_confidence_threshold_property->getFloat()) detectionColor.a *= m_low_confidence_alpha_property->getFloat();
