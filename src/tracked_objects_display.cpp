@@ -49,6 +49,11 @@ void TrackedObjectsDisplay::onInitialize()
     m_render_covariances_property       = new rviz::BoolProperty( "Render covariances", true, "Render track covariance ellipses", this, SLOT(stylesChanged()));
     m_render_velocities_property        = new rviz::BoolProperty( "Render velocities", true, "Render track velocity arrows", this, SLOT(stylesChanged()));
     m_render_ids_property               = new rviz::BoolProperty( "Render track IDs", true, "Render track IDs as text", this, SLOT(stylesChanged()));
+    
+    m_render_class_ids_property         = new rviz::BoolProperty( "Render track class IDs", true, "Render track class ID as text", this, SLOT(stylesChanged()));
+    m_render_class_str_property         = new rviz::BoolProperty( "Render track class string", true, "Render track class string as text", this, SLOT(stylesChanged()));
+    m_render_class_conf_property        = new rviz::BoolProperty( "Render track class confidence", true, "Render track class confidence as text", this, SLOT(stylesChanged()));
+    
     m_render_detection_ids_property     = new rviz::BoolProperty( "Render detection IDs", true, "Render IDs of the detection that a track was matched against, if any", this, SLOT(stylesChanged()));
     m_render_track_state_property       = new rviz::BoolProperty( "Render track state", true, "Render track state text", this, SLOT(stylesChanged()));
 
@@ -186,10 +191,15 @@ void TrackedObjectsDisplay::stylesChanged()
         trackedObjectVisual->stateText->setPosition(Ogre::Vector3(0,0, objectHeight + trackedObjectVisual->stateText->getCharacterHeight()));
             
         const double stateTextOffset = m_render_track_state_property->getBool() ? 1.2*trackedObjectVisual->stateText->getCharacterHeight() : 0;
-        trackedObjectVisual->idText->setCharacterHeight(0.25 * m_commonProperties->font_scale->getFloat());
-        trackedObjectVisual->idText->setVisible(m_render_ids_property->getBool() && trackVisible);
-        trackedObjectVisual->idText->setColor(fontColor);
-        trackedObjectVisual->idText->setPosition(Ogre::Vector3(0,0, objectHeight + trackedObjectVisual->idText->getCharacterHeight() + stateTextOffset));
+        // trackedObjectVisual->idText->setCharacterHeight(0.25 * m_commonProperties->font_scale->getFloat());
+        // trackedObjectVisual->idText->setVisible(m_render_ids_property->getBool() && trackVisible);
+        // trackedObjectVisual->idText->setColor(fontColor);
+        // trackedObjectVisual->idText->setPosition(Ogre::Vector3(0,0, objectHeight + trackedObjectVisual->idText->getCharacterHeight() + stateTextOffset));
+
+        trackedObjectVisual->trackInfoText->setCharacterHeight(0.25 * m_commonProperties->font_scale->getFloat());
+        trackedObjectVisual->trackInfoText->setVisible((m_render_ids_property->getBool()||m_render_class_ids_property->getBool()||m_render_class_str_property->getBool()) && trackVisible);
+        trackedObjectVisual->trackInfoText->setColor(fontColor);
+        trackedObjectVisual->trackInfoText->setPosition(Ogre::Vector3(0,0, objectHeight + trackedObjectVisual->trackInfoText->getCharacterHeight() + stateTextOffset));
 
         // Update velocity arrow color
         double arrowAlpha = m_render_velocities_property->getBool() ? trackColor.a : 0.0;
@@ -360,10 +370,10 @@ void TrackedObjectsDisplay::processMessage(const tracking_msgs::TrackedObjects::
         // Texts
         //
         {
-            if (!trackedObjectVisual->idText) {
-                trackedObjectVisual->idText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
+            if (!trackedObjectVisual->trackInfoText) {
                 trackedObjectVisual->stateText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
                 trackedObjectVisual->detectionIdText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
+                trackedObjectVisual->trackInfoText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
             }
 
             // Detection ID
@@ -383,9 +393,14 @@ void TrackedObjectsDisplay::processMessage(const tracking_msgs::TrackedObjects::
 
             trackedObjectVisual->stateText->setCaption(ss.str());
             
-            // Track ID
-            ss.str(""); ss << trackedObjectIt->track_id;
-            trackedObjectVisual->idText->setCaption(ss.str());
+            // Track + class info
+            ss.str(""); 
+            if(m_render_ids_property->getBool()){ss << "[" << trackedObjectIt->track_id <<"]";}
+            if(m_render_class_ids_property->getBool()){ss << " Class: " << trackedObjectIt->class_id;}
+            if(m_render_class_str_property->getBool()){ss << " " << trackedObjectIt->class_string;}
+            if(m_render_class_conf_property->getBool()){ss << " ("<< fixed << setprecision(2) << trackedObjectIt->class_confidence << "%)";}
+
+            trackedObjectVisual->trackInfoText->setCaption(ss.str());
         }
 
         //

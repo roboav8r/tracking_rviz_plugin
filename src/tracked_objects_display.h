@@ -35,7 +35,7 @@ namespace tracking_rviz_plugin
         boost::shared_ptr<Ogre::SceneNode> sceneNode, historySceneNode, historyLineSceneNode;
 
         boost::shared_ptr<ObjectVisual> objectVisual;
-        boost::shared_ptr<TextNode> idText, detectionIdText, stateText;
+        boost::shared_ptr<TextNode> detectionIdText, stateText, trackInfoText;
         boost::shared_ptr<rviz::Arrow> velocityArrow;
         boost::shared_ptr<CovarianceVisual> covarianceVisual;
 
@@ -115,6 +115,9 @@ namespace tracking_rviz_plugin
         rviz::BoolProperty* m_render_state_prediction_property;
         rviz::BoolProperty* m_render_velocities_property;
         rviz::BoolProperty* m_render_ids_property;
+        rviz::BoolProperty* m_render_class_ids_property;
+        rviz::BoolProperty* m_render_class_str_property;
+        rviz::BoolProperty* m_render_class_conf_property;
         rviz::BoolProperty* m_render_detection_ids_property;
         rviz::BoolProperty* m_render_track_state_property;
 

@@ -222,13 +222,13 @@ void DetectedObjectsDisplay::processMessage(const tracking_msgs::DetectedObjects
             // Modality + detection text
             if (!detectedObjectVisual->modDetText) {
                 detectedObjectVisual->modDetText.reset(new TextNode(context_->getSceneManager(), currentSceneNode));
+                detectedObjectVisual->modDetText->showOnTop();
             }
 
             ss.str("");
             if(m_render_modality_text_property->getBool()){ss << msg->sensor_name;}
             if(m_render_detection_ids_property->getBool()){ss << " det #" << detectedObjectIt->detection_id;}
             detectedObjectVisual->modDetText->setCaption(ss.str());
-            detectedObjectVisual->modDetText->showOnTop();
 
             // // Modality text
             // if (!detectedObjectVisual->modalityText) {
